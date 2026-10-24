@@ -493,3 +493,28 @@ select.input option { background: #14111d }
 .field label.drop { display: grid; margin-bottom: 0; font-weight: 400 }
 select { font: inherit; color: inherit }
 select.input { color: var(--txt) }
+
+/* ======================= v2.1: YouTube background & backdrop ======================= */
+.profile-video {
+  inset: -60px; width: auto; height: auto; overflow: hidden;
+  background: #000 center/cover no-repeat;
+  filter: blur(var(--vblur, 6px)) saturate(1.2); transform: none;
+}
+/* iframe 16:9 yang selalu menutupi layar penuh (seperti object-fit: cover) */
+.profile-video .yt-frame {
+  position: absolute; top: 50%; left: 50%; border: 0; pointer-events: none;
+  width: max(100%, calc((100vh + 120px) * 16 / 9)); height: max(100%, calc((100vw + 120px) * 9 / 16));
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.profile-overlay { position: fixed; inset: 0; z-index: -2; pointer-events: none; transition: background .3s }
+.profile-vignette { z-index: -2; background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, .35) 100%) }
+.mock .preview-video { background: #000 center/cover no-repeat; filter: blur(var(--vblur, 6px)); opacity: 1 }
+.mock .preview-overlay { position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none }
+.yt-thumb { width: 120px; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: #000 }
+.input.bad { border-color: rgba(248, 113, 113, .6) }
+.backdrop-ctl { display: flex; gap: 12px; align-items: center; flex-wrap: wrap }
+.backdrop-ctl .color-in { width: 64px; flex: none }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap }
+.swatches button { width: 28px; height: 28px; border-radius: 9px; background: var(--c); border: 1px solid var(--line2); transition: transform .15s }
+.swatches button:hover { transform: scale(1.1) }
+.swatches button.on { outline: 2px solid var(--a1); outline-offset: 2px }

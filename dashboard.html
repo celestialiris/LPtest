@@ -37,6 +37,7 @@
   </div>
 
   <main class="wrap dash" id="dash" hidden>
+    <div>
     <section class="panel">
       <h2>Edit profil</h2>
       <p>Perubahan langsung terlihat di preview. Jangan lupa simpan.</p>
@@ -60,6 +61,35 @@
         </div>
       </form>
     </section>
+
+    <section class="panel settings" id="account">
+      <h2>Akun &amp; keamanan</h2>
+      <p class="hint" id="accHint">Kelola email dan password untuk login.</p>
+      <div class="badge-mail">✉ <span id="curEmail">—</span></div>
+
+      <div id="pwBlock">
+        <form id="emailChange" autocomplete="off">
+          <h3>Ganti email</h3>
+          <p class="hint">Masukkan email baru dan password saat ini untuk konfirmasi.</p>
+          <div class="field"><label>Email baru</label><input class="input" type="email" name="newEmail" required autocomplete="email"></div>
+          <div class="field"><label>Password saat ini</label><input class="input" type="password" name="current" required autocomplete="current-password"></div>
+          <button class="btn btn-ghost" type="submit">Simpan email</button>
+        </form>
+
+        <form id="pwChange" autocomplete="off">
+          <h3>Ganti password</h3>
+          <p class="hint">Minimal 6 karakter.</p>
+          <div class="field"><label>Password saat ini</label><input class="input" type="password" name="current" required autocomplete="current-password"></div>
+          <div class="row">
+            <div class="field"><label>Password baru</label><input class="input" type="password" name="next" required minlength="6" autocomplete="new-password"></div>
+            <div class="field"><label>Ulangi password baru</label><input class="input" type="password" name="confirm" required minlength="6" autocomplete="new-password"></div>
+          </div>
+          <button class="btn btn-ghost" type="submit">Simpan password</button>
+        </form>
+      </div>
+      <p class="hint" id="noPw" hidden>Akun ini masuk lewat GitHub/Google, jadi email &amp; password dikelola di sana.</p>
+    </section>
+    </div>
 
     <aside class="sticky">
       <div class="mock" id="preview" style="margin:0 auto"></div>

@@ -28,6 +28,7 @@ glint/
 3. **Build → Firestore Database → Create database** (mode *production*, region terdekat, mis. `asia-southeast2` Jakarta).
 4. Tab **Rules** → tempel isi `firestore.rules` → **Publish**.
 5. **Build → Authentication → Get started → Sign-in method**:
+   - **Email/Password** → Enable. Lalu tab **Users → Add user** untuk membuat akun (email + password). Pemilik akun bisa mengganti email & password sendiri di **Dashboard → Akun & keamanan**.
    - **Google** → Enable.
    - **GitHub** → Enable. Firebase akan menampilkan *callback URL* seperti `https://PROJECT.firebaseapp.com/__/auth/handler`. Lanjut ke langkah 2.
 

@@ -1,6 +1,7 @@
 import { loadPublic, addView, validUsername, SITE_NAME } from "./firebase.js";
 import { applyBrand } from "./ui.js";
 import { renderCard, applyBg, applyVideoBg, applyOverlay } from "./card.js";
+import { mountPlayer, savedVolume } from "./player-ui.js";
 
 applyBrand();
 
@@ -35,7 +36,16 @@ function notFound(msg) {
   const key = "viewed_" + p.username;
   try { if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); addView(p.uid); } } catch (_) {}
 
+  // Suara hanya boleh menyala setelah klik pertama pengunjung (aturan browser)
+  const withSound = !!video && p.videoSound !== false;
+  if (withSound) enter.querySelector("small").hidden = false;
+  if (video && withSound) video.setVolume(savedVolume(video.getVolume()));
+
   enter.addEventListener("click", () => {
     enter.classList.add("gone"); page.classList.add("entered");
+    if (video) {
+      video.start(withSound);
+      if (withSound) mountPlayer(video, { accent: p.accent });
+    }
   }, { once: true });
 })();

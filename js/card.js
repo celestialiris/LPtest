@@ -1,6 +1,6 @@
 import { escapeHtml, safeUrl } from "./firebase.js";
 import { badgesHtml } from "./badges.js";
-import { ytThumb, ytIframe } from "./youtube.js";
+import { ytThumb, createBgPlayer } from "./youtube.js";
 
 const ICONS = {
   github: '<path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.6 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z" fill="currentColor"/>',
@@ -87,19 +87,22 @@ export function blurPx(v) {
   return n + "px";
 }
 
-// Video YouTube layar penuh dengan efek blur (halaman profil publik)
+// Video YouTube layar penuh, di tengah, dengan efek blur (halaman profil publik).
+// Mengembalikan controller pemutar (lihat createBgPlayer) atau false.
 export function applyVideoBg(container, p) {
   const id = p.bgYoutube || "";
   if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return false;
   const wrap = document.createElement("div");
-  wrap.className = "profile-video";
+  wrap.className = "profile-video" + (p.videoShape === "portrait" ? " portrait" : "");
   wrap.style.setProperty("--vblur", blurPx(p.bgBlur));
   wrap.style.backgroundImage = `url("${ytThumb(id)}")`; // tampil selama video dimuat
-  wrap.append(ytIframe(id, "yt-frame"));
   const vig = document.createElement("div");
   vig.className = "profile-vignette";
   container.prepend(wrap, vig);
-  return wrap;
+  const vol = Number.isFinite(+p.videoVolume) ? Math.max(0, Math.min(100, +p.videoVolume)) : 50;
+  const ctrl = createBgPlayer(wrap, id, { volume: vol });
+  ctrl.wrap = wrap;
+  return ctrl;
 }
 
 export function applyBg(el, url) {

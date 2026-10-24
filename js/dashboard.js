@@ -5,7 +5,7 @@ import {
 import { applyBrand, cursorGlow } from "./ui.js";
 import { renderCard } from "./card.js";
 import { badgesHtml } from "./badges.js";
-import { youtubeId, ytThumb } from "./youtube.js";
+import { youtubeId, ytThumb, isShortsLink } from "./youtube.js";
 
 applyBrand(); cursorGlow();
 
@@ -44,6 +44,9 @@ function readForm() {
     accent: String(f.get("accent") || "#a855f7"),
     bgBlur: Math.max(0, Math.min(20, parseInt(f.get("bgBlur"), 10) || 0)),
     bgYoutube: youtubeId(f.get("bgYoutube")),
+    videoShape: f.get("videoShape") === "portrait" ? "portrait" : "landscape",
+    videoSound: f.get("videoSound") === "on",
+    videoVolume: Math.max(0, Math.min(100, parseInt(form.videoVolume.value, 10) || 0)),
     overlayColor: /^#[0-9a-f]{6}$/i.test(f.get("overlayColor")) ? f.get("overlayColor") : "#000000",
     overlayOpacity: Math.max(0, Math.min(100, parseInt(f.get("overlayOpacity"), 10) || 0)),
     bgVideo: "", bgVideoPath: "",
@@ -59,6 +62,10 @@ function update() {
   $("bioCount").textContent = `${data.bio.length}/160`;
   $("blurVal").textContent = `${data.bgBlur} px`;
   $("opVal").textContent = `${data.overlayOpacity}%`;
+  $("volVal").textContent = data.videoSound ? `${data.videoVolume}%` : "mati";
+  form.videoVolume.disabled = !data.videoSound;
+  form.querySelector(".switch em").textContent = data.videoSound ? "Aktif" : "Mati";
+  $("videoOpts").hidden = !data.bgYoutube;
   document.querySelectorAll("#swatches button").forEach((b) => b.classList.toggle("on", b.dataset.c.toLowerCase() === data.overlayColor.toLowerCase()));
   renderCard($("preview"), { ...profile, ...data }, { previewVideo: true });
 }
@@ -73,6 +80,9 @@ function fill(p) {
   form.bgBlur.value = Number.isFinite(+p.bgBlur) ? p.bgBlur : 6;
   $("myBadges").innerHTML = badgesHtml(p.badges) || '<span style="color:var(--mute);font-size:.85rem">Belum ada badge.</span>';
   form.bgYoutube.value = p.bgYoutube ? `https://youtu.be/${p.bgYoutube}` : "";
+  form.videoShape.value = p.videoShape === "portrait" ? "portrait" : "landscape";
+  form.videoSound.checked = p.videoSound !== false;
+  form.videoVolume.value = Number.isFinite(+p.videoVolume) ? p.videoVolume : 50;
   form.overlayColor.value = /^#[0-9a-f]{6}$/i.test(p.overlayColor || "") ? p.overlayColor : "#000000";
   form.overlayOpacity.value = Number.isFinite(+p.overlayOpacity) ? p.overlayOpacity : 35;
   syncVideo();
@@ -119,7 +129,10 @@ function syncVideo() {
   $("ytInput").classList.toggle("bad", !!raw && !id);
   if (id) { $("ytThumb").src = ytThumb(id); $("ytStatus").textContent = "Video siap dipakai sebagai background."; }
 }
-$("ytInput").addEventListener("input", syncVideo);
+$("ytInput").addEventListener("input", () => {
+  if (isShortsLink($("ytInput").value)) form.videoShape.value = "portrait";
+  syncVideo();
+});
 $("ytInput").addEventListener("change", () => {
   const raw = $("ytInput").value.trim();
   if (raw && !youtubeId(raw)) toast("Link YouTube tidak dikenali. Contoh: https://youtu.be/xxxxxxxxxxx", "bad");

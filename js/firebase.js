@@ -241,6 +241,9 @@ export async function claim(name, user) {
       bgBlur: 6,
       overlayColor: "#000000",
       overlayOpacity: 35,
+      videoShape: "landscape",
+      videoSound: true,
+      videoVolume: 50,
       views: 0,
       createdAt: serverTimestamp()
     });

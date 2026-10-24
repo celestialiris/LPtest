@@ -2,9 +2,14 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "firestore.rules", "README.md", "**/.*", "**/node_modules/**"],
-    "cleanUrls": false
+    "ignore": ["firebase.json", "firestore.rules", "storage.rules", "README.md", "**/.*", "**/node_modules/**"],
+    "headers": [
+      { "source": "sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
   }
 }

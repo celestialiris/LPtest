@@ -38,9 +38,12 @@ service cloud.firestore {
         && request.resource.data.email == myEmail()
         && request.resource.data.name is string && request.resource.data.name.size() <= 40
         && request.resource.data.createdAt == request.time;
+      // Pemilik hanya boleh memperbarui email, status verifikasi & waktu login terakhir
       allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email'])
-        && request.resource.data.email == myEmail();
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'emailVerified', 'lastLoginAt'])
+        && request.resource.data.email == myEmail()
+        && request.resource.data.get('emailVerified', false) is bool
+        && (!('lastLoginAt' in request.resource.data) || request.resource.data.lastLoginAt is timestamp);
       allow delete: if isAdmin();
     }
 
@@ -77,28 +80,97 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if true;
 
+      function okUrl(u) {
+        return u is string && u.size() <= 500 && (u == '' || u.matches('^https?://.+'));
+      }
       function validProfile(d) {
-        return d.displayName is string && d.displayName.size() <= 40
+        return d.keys().hasOnly(['username', 'displayName', 'bio', 'avatar', 'accent', 'bg', 'links', 'views',
+                                 'createdAt', 'badges', 'bgVideo', 'bgVideoPath', 'bgBlur'])
+          && d.displayName is string && d.displayName.size() <= 40
           && d.bio is string && d.bio.size() <= 160
-          && d.avatar is string && d.avatar.size() <= 500
-          && d.bg is string && d.bg.size() <= 500
+          && okUrl(d.avatar) && okUrl(d.bg)
           && d.accent is string && d.accent.matches('^#[0-9a-fA-F]{6}$')
-          && d.links is list && d.links.size() <= 20;
+          && d.links is list && d.links.size() <= 20
+          && d.get('badges', []) is list && d.get('badges', []).size() <= 12
+          && d.get('bgBlur', 6) is number && d.get('bgBlur', 6) >= 0 && d.get('bgBlur', 6) <= 20
+          // video hanya boleh dari Firebase Storage milik sendiri
+          && (d.get('bgVideo', '') == '' || d.get('bgVideo', '').matches('^https://firebasestorage[.]googleapis[.]com/.+'))
+          && (d.get('bgVideoPath', '') == '' || d.get('bgVideoPath', '').matches('^videos/' + uid + '/[^/]+$'));
       }
 
       allow create: if signedIn() && request.auth.uid == uid
         && validProfile(request.resource.data)
         && request.resource.data.views == 0
+        && request.resource.data.get('badges', []).size() == 0
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
 
-      allow update: if (signedIn() && request.auth.uid == uid
-          && request.resource.data.username == resource.data.username
-          && request.resource.data.views == resource.data.views
-          && validProfile(request.resource.data))
+      allow update:
+        // Pemilik: tidak boleh mengubah username, views, maupun badge
+        if (signedIn() && request.auth.uid == uid
+            && request.resource.data.username == resource.data.username
+            && request.resource.data.views == resource.data.views
+            && request.resource.data.get('badges', []) == resource.data.get('badges', [])
+            && validProfile(request.resource.data))
+        // Superadmin: hanya boleh mengubah badge
+        || (isAdmin()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['badges'])
+            && request.resource.data.badges is list && request.resource.data.badges.size() <= 12)
+        // Pengunjung: hanya +1 views
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
-          && request.resource.data.views == resource.data.views + 1);
+            && request.resource.data.views == resource.data.views + 1);
 
       allow delete: if isAdmin();
+    }
+
+    // ---------- pengaturan situs (tema & logo) — hanya superadmin ----------
+    match /settings/site {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['theme', 'logo', 'updatedAt'])
+        && request.resource.data.get('theme', 'nebula') in ['nebula', 'aurora', 'inferno', 'frost']
+        && request.resource.data.get('logo', '') is string
+        && request.resource.data.get('logo', '').size() < 400000
+        && (request.resource.data.get('logo', '') == ''
+            || request.resource.data.get('logo', '').matches('^data:image/(png|jpeg|webp|svg[+]xml);base64,.+'));
+    }
+
+    // ---------- permintaan reset password (ID = email huruf kecil) ----------
+    // Bisa dibuat tanpa login (anggota yang lupa password). Hanya superadmin yang bisa membaca.
+    match /resetRequests/{email} {
+      function validRequest(d) {
+        return d.keys().hasOnly(['email', 'note', 'status', 'createdAt'])
+          && d.email == email
+          && email.matches('^[^@/ ]{1,64}@[^@/ ]{1,190}[.][a-z]{2,24}$')
+          && d.note is string && d.note.size() <= 200
+          && d.status == 'pending'
+          && d.createdAt == request.time;
+      }
+      allow read, delete: if isAdmin();
+      allow create: if validRequest(request.resource.data);
+      allow update: if (resource.data.status == 'done' && validRequest(request.resource.data))
+        || (isAdmin()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'handledAt'])
+            && request.resource.data.status == 'done');
+    }
+
+    // ---------- log aktivitas ----------
+    match /activity/{id} {
+      allow read, delete: if isAdmin();
+      allow update: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'event', 'device', 'os', 'browser', 'tz', 'region', 'lang', 'screen', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.get('email', '')
+        && request.resource.data.event in ['signup', 'login', 'logout', 'password_change', 'email_change', 'profile_save',
+                                           'video_upload', 'site_settings', 'badge_update', 'admin_reset_sent']
+        && request.resource.data.device is string && request.resource.data.device.size() <= 40
+        && request.resource.data.os is string && request.resource.data.os.size() <= 40
+        && request.resource.data.browser is string && request.resource.data.browser.size() <= 40
+        && request.resource.data.tz is string && request.resource.data.tz.size() <= 60
+        && request.resource.data.region is string && request.resource.data.region.size() <= 60
+        && request.resource.data.lang is string && request.resource.data.lang.size() <= 20
+        && request.resource.data.screen is string && request.resource.data.screen.size() <= 20
+        && request.resource.data.at == request.time;
     }
   }
 }

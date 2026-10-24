@@ -2,11 +2,22 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Superadmin · glint</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Superadmin · Bohye Page</title>
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#07060b">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bohye Page">
+  <meta name="application-name" content="Bohye Page">
+  <script src="version.js"></script>
+  <script src="js/theme-boot.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
   <div class="grain"></div>
@@ -15,7 +26,7 @@
   <div class="cursor-glow" id="glow"></div>
 
   <nav class="top">
-    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>Bohye Page</span></a>
     <div class="nav-right">
       <button class="btn btn-ghost bell" id="bellBtn" title="Notifikasi" hidden>🔔<span class="count" id="bellCount" hidden>0</span></button>
       <a class="btn btn-ghost" href="dashboard.html" id="acctBtn" hidden>Akun saya</a>
@@ -51,7 +62,7 @@
       <div>
         <span class="role">✦ Superadmin</span>
         <h1>Panel <span class="grad-text">admin</span></h1>
-        <p>Masuk sebagai <b id="adminEmail"></b></p>
+        <p>Masuk sebagai <b id="adminEmail"></b> <span class="badges" id="adminBadges"></span></p>
       </div>
       <button class="btn btn-ghost" id="pushBtn">🔔 Aktifkan notifikasi browser</button>
     </div>
@@ -60,33 +71,136 @@
       <div class="kpi"><span>Total anggota</span><b id="kMembers">0</b></div>
       <div class="kpi"><span>Profil dibuat</span><b id="kProfiles">0</b></div>
       <div class="kpi"><span>Total views</span><b id="kViews">0</b></div>
-      <div class="kpi hot"><span>Notifikasi belum dibaca</span><b id="kUnread">0</b></div>
+      <div class="kpi hot"><span>Perlu ditindak</span><b id="kTodo">0</b></div>
     </div>
 
-    <div class="admin-grid">
-      <section class="panel" id="notifPanel">
+    <div class="seg" role="tablist" id="seg">
+      <button class="on" data-sec="overview">Ringkasan<span class="pip" id="pipNotif" hidden>0</span></button>
+      <button data-sec="members">Anggota</button>
+      <button data-sec="resets">Reset password<span class="pip" id="pipReset" hidden>0</span></button>
+      <button data-sec="logs">Log aktivitas</button>
+      <button data-sec="look">Tampilan</button>
+    </div>
+
+    <!-- RINGKASAN -->
+    <section data-pane="overview" class="admin-grid">
+      <div class="panel" id="notifPanel">
         <div class="panel-head">
           <h2>Pendaftaran baru <span style="color:var(--mute);font-size:.8rem;font-weight:500">· live</span></h2>
           <button class="btn btn-ghost" id="readAll">Tandai semua dibaca</button>
         </div>
         <div class="notif-list" id="notifs"><div class="empty">Memuat…</div></div>
-      </section>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Aktivitas terbaru</h2><button class="btn btn-ghost" data-goto="logs">Lihat semua →</button></div>
+        <div class="mini-log" id="recentLog"><div class="empty">Memuat…</div></div>
+      </div>
+    </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Anggota</h2>
-          <button class="btn btn-ghost" id="refresh">↻ Muat ulang</button>
+    <!-- ANGGOTA -->
+    <section data-pane="members" class="panel" hidden>
+      <div class="panel-head">
+        <h2>Anggota</h2>
+        <button class="btn btn-ghost" id="refresh">↻ Muat ulang</button>
+      </div>
+      <input class="input search" id="search" placeholder="Cari email, nama, atau username…">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Email</th><th>Nama</th><th>Username</th><th>Badge</th><th>Bergabung</th><th>Login terakhir</th><th style="text-align:right">Views</th><th></th></tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RESET PASSWORD -->
+    <section data-pane="resets" class="admin-grid" hidden>
+      <div class="panel">
+        <div class="panel-head"><h2>Permintaan reset</h2></div>
+        <div id="resetList"><div class="empty">Memuat…</div></div>
+      </div>
+      <div class="panel">
+        <h2 style="font-size:1.2rem;margin-bottom:6px">Kirim link reset manual</h2>
+        <p class="hint" style="color:var(--mute);font-size:.88rem;margin-bottom:14px">Firebase mengirim email resmi berisi link. Anggota membuat password barunya sendiri dari link itu.</p>
+        <form id="manualReset" class="email-form">
+          <input class="input" type="email" name="email" placeholder="Email anggota" required>
+          <button class="btn btn-primary" type="submit">Kirim link reset</button>
+        </form>
+        <div class="note">🔒 <b>Password tidak bisa dilihat siapa pun</b>, termasuk superadmin. Firebase menyimpannya dalam bentuk hash yang tidak bisa dibalik. Yang bisa dilakukan admin adalah mengirim link reset.</div>
+      </div>
+    </section>
+
+    <!-- LOG AKTIVITAS -->
+    <section data-pane="logs" class="panel" hidden>
+      <div class="panel-head"><h2>Log aktivitas <span style="color:var(--mute);font-size:.8rem;font-weight:500">· 200 terbaru · live</span></h2></div>
+      <div class="filters">
+        <input class="input" id="logSearch" placeholder="Cari email…">
+        <select class="input" id="logEvent"><option value="">Semua aktivitas</option></select>
+        <select class="input" id="logDevice"><option value="">Semua perangkat</option><option>HP</option><option>Tablet</option><option>Desktop</option></select>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Waktu</th><th>Email</th><th>Aktivitas</th><th>Perangkat</th><th>OS</th><th>Browser</th><th>Lokasi (perkiraan)</th><th>Layar</th></tr></thead>
+          <tbody id="logRows"><tr><td colspan="8" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+      <p style="color:var(--mute);font-size:.78rem;margin-top:10px">Lokasi diperkirakan dari zona waktu perangkat — tanpa GPS dan tanpa alamat IP.</p>
+    </section>
+
+    <!-- TAMPILAN -->
+    <section data-pane="look" class="admin-grid" hidden>
+      <div class="panel">
+        <div class="panel-head"><h2>Tema situs</h2></div>
+        <p style="color:var(--mute);font-size:.88rem;margin:-6px 0 14px">Berlaku untuk semua pengunjung &amp; anggota, langsung tanpa reload.</p>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Logo situs</h2></div>
+        <div class="media-row" style="margin:0 0 14px">
+          <div class="logo-prev" id="logoPrev"></div>
+          <div style="font-size:.85rem;color:var(--mute)">Tampil di navigasi &amp; tab browser.<br>Dipotong persegi, 256×256 px.</div>
         </div>
-        <input class="input search" id="search" placeholder="Cari email, nama, atau username…">
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr><th>Email</th><th>Nama</th><th>Username</th><th>Bergabung</th><th style="text-align:right">Views</th><th></th></tr></thead>
-            <tbody id="rows"><tr><td colspan="6" class="empty">Memuat…</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+        <label class="drop" id="logoDrop">
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+          <span style="font-size:1.5rem">🖼️</span>
+          <span><b>Pilih logo</b> atau seret ke sini</span>
+          <span style="font-size:.78rem">PNG, JPG, WebP, atau SVG · maks. 5 MB</span>
+        </label>
+        <div class="dash-actions"><button class="btn btn-ghost" id="logoRemove">Kembalikan logo bawaan</button></div>
+
+        <h2 style="font-size:1.2rem;margin:26px 0 8px">Info aplikasi</h2>
+        <dl class="kv" style="margin:0">
+          <dt>Versi</dt><dd><span class="ver" data-version>v2.0.0</span></dd>
+          <dt>Hak cipta</dt><dd data-copyright>© Bohye 2026 Darkness 666</dd>
+          <dt>Aplikasi</dt><dd><button class="link-btn" data-install-app style="padding:0">📲 Pasang di perangkat ini</button></dd>
+        </dl>
+      </div>
+    </section>
   </main>
+
+  <!-- Detail anggota -->
+  <div class="modal sheet" id="memberSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="box">
+      <button class="close" data-close aria-label="Tutup">×</button>
+      <span class="role" id="mRole">Anggota</span>
+      <h3 id="mTitle">—</h3>
+      <div style="color:var(--mute);font-size:.88rem" id="mSub"></div>
+      <dl class="kv" id="mKv"></dl>
+      <div class="note">🔒 <b>Password:</b> tersimpan ter-hash oleh Firebase dan tidak bisa dilihat. Gunakan tombol di bawah untuk mengirim link reset ke email anggota.</div>
+      <div class="dash-actions" style="margin-top:0">
+        <button class="btn btn-primary" id="mReset">✉ Kirim link reset password</button>
+        <a class="btn btn-ghost" id="mProfile" target="_blank" rel="noopener">Lihat profil ↗</a>
+        <button class="btn btn-ghost" id="mDelete">Hapus profil</button>
+      </div>
+      <h4>Badge</h4>
+      <div id="mBadgeWrap">
+        <div class="badge-pick" id="mBadges"></div>
+        <div class="dash-actions" style="margin-top:12px"><button class="btn btn-ghost" id="mSaveBadges">Simpan badge</button></div>
+      </div>
+      <p id="mNoProfile" style="color:var(--mute);font-size:.86rem" hidden>Anggota ini belum mengklaim username, jadi belum bisa diberi badge.</p>
+      <h4>Aktivitas terakhir</h4>
+      <div class="mini-log" id="mLog"><div class="empty">Memuat…</div></div>
+    </div>
+  </div>
 
   <script type="module" src="js/admin.js"></script>
 </body>

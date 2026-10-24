@@ -11,7 +11,7 @@ export const firebaseConfig = {
 };
 
 // Nama & domain yang tampil di UI — ganti sesuka kamu.
-export const SITE_NAME = "glint";
+export const SITE_NAME = "Bohye Page";
 export const SITE_DOMAIN = "celestialiris.github.io/LPtest";
 
 // Email akun superadmin (dibuat manual di Firebase Console → Authentication → Users).

@@ -2,12 +2,22 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>glint — satu link untuk semua tentang kamu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bohye Page — satu link untuk semua tentang kamu</title>
   <meta name="description" content="Buat halaman bio-link yang estetik dalam hitungan detik. Gratis, cepat, dan bisa dikustomisasi.">
   <meta name="theme-color" content="#07060b">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%236366f1'/%3E%3Cstop offset='.5' stop-color='%23a855f7'/%3E%3Cstop offset='1' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 7l2.2 6.8L25 16l-6.8 2.2L16 25l-2.2-6.8L7 16l6.8-2.2z' fill='white'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bohye Page">
+  <meta name="application-name" content="Bohye Page">
+  <script src="version.js"></script>
+  <script src="js/theme-boot.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
   <div class="grain"></div>
@@ -16,7 +26,7 @@
   <div class="cursor-glow" id="glow"></div>
 
   <nav class="top">
-    <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>Bohye Page</span></a>
     <div class="links">
       <a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a>
     </div>
@@ -32,7 +42,7 @@
     <p class="sub reveal">Buat halaman bio yang estetik, cepat, dan benar-benar terasa milikmu. Gabungkan semua sosial media, karya, dan musikmu dalam satu tempat.</p>
 
     <form class="claim reveal" id="claimForm" autocomplete="off">
-      <span class="prefix"><span data-site-domain>glint.lol</span>/</span>
+      <span class="prefix"><span data-site-domain>celestialiris.github.io/LPtest</span>/</span>
       <input id="claimInput" maxlength="20" spellcheck="false" aria-label="Username" placeholder="username">
       <button class="btn btn-primary" type="submit" id="claimBtn">Klaim sekarang</button>
     </form>
@@ -140,9 +150,9 @@
 
   <footer>
     <div class="wrap">
-      <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+      <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>Bohye Page</span></a>
       <div class="fl"><a href="#fitur">Fitur</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><a href="https://github.com" target="_blank" rel="noopener">GitHub</a></div>
-      <span>© <span id="yr"></span> <span data-site-name>glint</span>. Dibuat dengan ✦</span>
+      <span class="foot-meta"><span data-copyright>© Bohye 2026 Darkness 666</span><span class="ver" data-version>v2.0.0</span><button class="link-btn" data-install-app>📲 Pasang aplikasi</button></span>
     </div>
   </footer>
 
@@ -167,6 +177,12 @@
         </div>
         <button class="btn btn-primary" type="submit" id="emailBtn">Masuk</button>
         <button type="button" class="link-btn" id="forgotBtn">Lupa password?</button>
+        <div class="forgot" id="forgotBox" hidden>
+          <p>Pilih cara reset password untuk email di atas:</p>
+          <button type="button" class="btn btn-ghost" id="forgotSelf">✉ Kirim link reset ke email saya</button>
+          <textarea class="input" id="forgotNote" maxlength="200" rows="2" placeholder="Catatan untuk admin (opsional)"></textarea>
+          <button type="button" class="btn btn-ghost" id="forgotAdmin">🛟 Minta bantuan superadmin</button>
+        </div>
       </form>
 
       <form id="signupForm" class="email-form" data-pane="signup" autocomplete="on" hidden>

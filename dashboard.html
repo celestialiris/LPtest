@@ -2,10 +2,21 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard · glint</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dashboard · Bohye Page</title>
   <meta name="theme-color" content="#07060b">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bohye Page">
+  <meta name="application-name" content="Bohye Page">
+  <script src="version.js"></script>
+  <script src="js/theme-boot.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
   <div class="grain"></div>
@@ -14,7 +25,7 @@
   <div class="cursor-glow" id="glow"></div>
 
   <nav class="top">
-    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>Bohye Page</span></a>
     <div class="nav-right">
       <a class="btn btn-ghost" id="adminBtn" href="admin.html" hidden>Panel admin</a>
       <a class="btn btn-ghost" id="viewBtn" href="#" target="_blank" rel="noopener" hidden>Lihat profil ↗</a>
@@ -30,7 +41,7 @@
       <h2>Klaim username dulu</h2>
       <p>Akunmu belum punya username. Pilih satu untuk mulai.</p>
       <form class="claim" id="claimForm" style="margin:0">
-        <span class="prefix"><span data-site-domain>glint.lol</span>/</span>
+        <span class="prefix"><span data-site-domain>celestialiris.github.io/LPtest</span>/</span>
         <input id="claimInput" maxlength="20" placeholder="username" spellcheck="false">
         <button class="btn btn-primary">Klaim</button>
       </form>
@@ -49,7 +60,32 @@
         </div>
         <div class="field"><label>Bio <span id="bioCount" style="float:right">0/160</span></label><textarea class="input" name="bio" maxlength="160" placeholder="ceritakan sedikit tentang kamu…"></textarea></div>
         <div class="field"><label>URL avatar</label><input class="input" name="avatar" placeholder="https://…/foto.jpg"></div>
-        <div class="field"><label>URL background (opsional)</label><input class="input" name="bg" placeholder="https://…/background.jpg"></div>
+        <div class="field"><label>URL gambar background (opsional)</label><input class="input" name="bg" placeholder="https://…/background.jpg"></div>
+
+        <div class="field">
+          <label>Video background</label>
+          <label class="drop" id="videoDrop">
+            <input type="file" id="videoFile" accept="video/mp4,video/webm,video/quicktime">
+            <span style="font-size:1.6rem">🎬</span>
+            <span><b>Pilih video</b> atau seret ke sini</span>
+            <span style="font-size:.78rem">MP4, WebM, atau MOV · maks. 25 MB · otomatis tanpa suara &amp; berulang</span>
+          </label>
+          <div class="progress" id="videoProg" hidden><i></i></div>
+          <div class="media-row" id="videoRow" hidden>
+            <video id="videoThumb" muted loop playsinline autoplay></video>
+            <div style="flex:1;font-size:.85rem;color:var(--mute)">Video aktif di profilmu.</div>
+            <button type="button" class="btn btn-ghost" id="videoRemove" style="padding:7px 12px;font-size:.8rem">Hapus video</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Efek blur background <span id="blurVal" style="float:right">6 px</span></label>
+          <input class="range" type="range" name="bgBlur" min="0" max="20" step="1" value="6">
+        </div>
+        <div class="field">
+          <label>Badge kamu</label>
+          <div class="badges" id="myBadges" style="justify-content:flex-start"></div>
+          <p style="font-size:.8rem;color:var(--mute);margin-top:6px">Badge diberikan oleh superadmin.</p>
+        </div>
 
         <div class="field">
           <label>Link (maks. 20)</label>

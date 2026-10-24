@@ -1,6 +1,6 @@
 import {
   configured, onUser, logout, getMyProfile, saveProfile, claim, isAvailable, validUsername,
-  profileUrl, toast, escapeHtml, loadPublic
+  profileUrl, toast, escapeHtml, loadPublic, hasPasswordLogin, changeEmail, changePassword, authMessage
 } from "./firebase.js";
 import { applyBrand, cursorGlow } from "./ui.js";
 import { renderCard } from "./card.js";
@@ -85,6 +85,47 @@ $("copyBtn").onclick = async () => {
   catch { toast("Tidak bisa menyalin otomatis.", "bad"); }
 };
 
+// ---------- akun: ganti email & password ----------
+function renderAccount(u) {
+  $("curEmail").textContent = u?.email || "—";
+  const pw = hasPasswordLogin(u);
+  $("pwBlock").hidden = !pw;
+  $("noPw").hidden = pw;
+}
+
+async function withBtn(form, label, fn) {
+  const btn = form.querySelector("button[type=submit]");
+  const old = btn.textContent; btn.disabled = true; btn.textContent = label;
+  try { await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+}
+
+$("emailChange").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (!configured) return toast("Mode demo: hubungkan Firebase dulu.", "bad");
+  if (f.newEmail.value.trim().toLowerCase() === (user.email || "").toLowerCase()) return toast("Itu email yang sama.", "bad");
+  withBtn(f, "Menyimpan…", async () => {
+    try {
+      const r = await changeEmail(f.current.value, f.newEmail.value);
+      if (r === "updated") { toast("Email berhasil diganti ✓", "ok"); renderAccount(user); }
+      else toast(`Link verifikasi dikirim ke ${f.newEmail.value}. Email berubah setelah link diklik.`, "ok");
+      f.reset();
+    } catch (err) { toast(authMessage(err), "bad"); }
+  });
+});
+
+$("pwChange").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (!configured) return toast("Mode demo: hubungkan Firebase dulu.", "bad");
+  if (f.next.value !== f.confirm.value) return toast("Password baru tidak sama.", "bad");
+  if (f.next.value === f.current.value) return toast("Password baru harus berbeda.", "bad");
+  withBtn(f, "Menyimpan…", async () => {
+    try { await changePassword(f.current.value, f.next.value); f.reset(); toast("Password berhasil diganti ✓", "ok"); }
+    catch (err) { toast(authMessage(err), "bad"); }
+  });
+});
+
 // ---------- claim (kalau belum punya) ----------
 $("claimInput").addEventListener("input", (e) => (e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "")));
 $("claimForm").addEventListener("submit", async (e) => {
@@ -103,7 +144,8 @@ $("claimForm").addEventListener("submit", async (e) => {
 // ---------- boot ----------
 if (!configured) {
   // Mode demo: tampilkan editor dengan data contoh
-  user = { uid: "demo" };
+  user = { uid: "demo", email: "demo@contoh.com", providerData: [{ providerId: "password" }] };
+  renderAccount(user);
   profile = await loadPublic("demo");
   fill(profile); show("dash");
   form.addEventListener("submit", (e) => { e.stopImmediatePropagation(); e.preventDefault(); toast("Mode demo: hubungkan Firebase untuk menyimpan.", "bad"); }, true);
@@ -111,6 +153,7 @@ if (!configured) {
   onUser(async (u) => {
     if (!u) { location.href = "index.html"; return; }
     user = u;
+    renderAccount(u);
     try {
       profile = await getMyProfile(u.uid);
       if (!profile) return show("noName");

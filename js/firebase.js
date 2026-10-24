@@ -1,6 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+  getAuth, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut,
+  signInWithEmailAndPassword, sendPasswordResetEmail, EmailAuthProvider,
+  reauthenticateWithCredential, updatePassword, updateEmail, verifyBeforeUpdateEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, updateDoc, runTransaction, serverTimestamp, increment,
@@ -40,6 +42,67 @@ export async function signIn(kind) {
 }
 
 export const logout = () => configured && signOut(auth);
+
+// ---------- Email & password ----------
+export async function signInEmail(email, password) {
+  if (!configured) throw new Error("not-configured");
+  return signInWithEmailAndPassword(auth, email.trim(), password);
+}
+
+export async function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email.trim());
+}
+
+export function hasPasswordLogin(user) {
+  return !!user && user.providerData.some((p) => p.providerId === "password");
+}
+
+// Firebase meminta login ulang (password saat ini) sebelum mengubah email/password
+async function reauth(currentPassword) {
+  const u = auth.currentUser;
+  const cred = EmailAuthProvider.credential(u.email, currentPassword);
+  await reauthenticateWithCredential(u, cred);
+  return u;
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const u = await reauth(currentPassword);
+  await updatePassword(u, newPassword);
+}
+
+// Mengembalikan "updated" bila langsung berubah, atau "verify" bila
+// Firebase mengirim link verifikasi ke email baru (default di project baru).
+export async function changeEmail(currentPassword, newEmail) {
+  const u = await reauth(currentPassword);
+  try {
+    await updateEmail(u, newEmail.trim());
+    return "updated";
+  } catch (err) {
+    if (err.code === "auth/operation-not-allowed") {
+      await verifyBeforeUpdateEmail(u, newEmail.trim());
+      return "verify";
+    }
+    throw err;
+  }
+}
+
+export function authMessage(err) {
+  const m = {
+    "auth/invalid-credential": "Email atau password salah.",
+    "auth/wrong-password": "Password salah.",
+    "auth/user-not-found": "Akun tidak ditemukan.",
+    "auth/invalid-email": "Format email tidak valid.",
+    "auth/too-many-requests": "Terlalu banyak percobaan. Coba lagi nanti.",
+    "auth/weak-password": "Password minimal 6 karakter.",
+    "auth/email-already-in-use": "Email itu sudah dipakai akun lain.",
+    "auth/requires-recent-login": "Silakan keluar lalu masuk lagi, kemudian ulangi.",
+    "auth/operation-not-allowed": "Metode login ini belum diaktifkan di Firebase.",
+    "auth/unauthorized-domain": "Domain ini belum ada di Authorized domains Firebase.",
+    "auth/popup-closed-by-user": "Login dibatalkan.",
+    "auth/account-exists-with-different-credential": "Email ini sudah terdaftar lewat metode login lain."
+  };
+  return m[err?.code] || (err?.code || err?.message || "Terjadi kesalahan.");
+}
 
 export async function isAvailable(name) {
   if (!validUsername(name)) return false;

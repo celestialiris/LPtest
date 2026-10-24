@@ -1,6 +1,6 @@
 import {
   configured, onUser, signIn, logout, isAvailable, validUsername, claim, getMyProfile,
-  countUsers, toast, escapeHtml
+  countUsers, toast, escapeHtml, signInEmail, resetPassword, authMessage
 } from "./firebase.js";
 import { applyBrand, cursorGlow, reveal, tilt, spotlight, typer, countUp } from "./ui.js";
 
@@ -47,14 +47,37 @@ modal.querySelectorAll("[data-provider]").forEach((btn) =>
     if (!configured) return toast("Isi firebase-config.js dulu untuk mengaktifkan login.", "bad");
     btn.disabled = true;
     try { await signIn(btn.dataset.provider); closeLogin(); }
-    catch (err) {
-      const msg = err.code === "auth/account-exists-with-different-credential"
-        ? "Email ini sudah terdaftar lewat provider lain. Coba metode login satunya."
-        : err.code === "auth/popup-closed-by-user" ? "Login dibatalkan." : "Gagal masuk: " + (err.code || err.message);
-      toast(msg, "bad");
-    } finally { btn.disabled = false; }
+    catch (err) { toast(authMessage(err), "bad"); }
+    finally { btn.disabled = false; }
   })
 );
+
+// Login email & password
+const emailForm = document.getElementById("emailForm");
+emailForm.querySelector(".pw-toggle").addEventListener("click", (e) => {
+  const pw = emailForm.password;
+  pw.type = pw.type === "password" ? "text" : "password";
+  e.currentTarget.classList.toggle("on", pw.type === "text");
+});
+emailForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!configured) return toast("Isi firebase-config.js dulu untuk mengaktifkan login.", "bad");
+  const btn = document.getElementById("emailBtn");
+  btn.disabled = true; btn.textContent = "Masuk…";
+  try {
+    await signInEmail(emailForm.email.value, emailForm.password.value);
+    emailForm.reset(); closeLogin();
+    toast("Berhasil masuk ✓", "ok");
+    if (!sessionStorage.getItem("pendingClaim")) setTimeout(() => (location.href = "dashboard.html"), 500);
+  } catch (err) { toast(authMessage(err), "bad"); }
+  finally { btn.disabled = false; btn.textContent = "Masuk"; }
+});
+document.getElementById("forgotBtn").addEventListener("click", async () => {
+  const email = emailForm.email.value.trim();
+  if (!email) { emailForm.email.focus(); return toast("Tulis email kamu dulu, lalu klik lagi.", "bad"); }
+  try { await resetPassword(email); toast("Kalau email terdaftar, link reset sudah dikirim.", "ok"); }
+  catch (err) { toast(authMessage(err), "bad"); }
+});
 
 let currentUser = null;
 const navRight = document.getElementById("navRight");

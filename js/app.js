@@ -1,13 +1,12 @@
 import {
   configured, onUser, logout, isAvailable, validUsername, claim, getMyProfile,
   countUsers, toast, escapeHtml, signInEmail, signUpEmail, resetPassword, authMessage,
-  isAdmin, ensureMember, SUPERADMIN_EMAIL
+  isAdmin, ensureMember, SUPERADMIN_EMAIL, requestAdminReset
 } from "./firebase.js";
 import { applyBrand, cursorGlow, reveal, tilt, spotlight, typer, countUp } from "./ui.js";
 
 applyBrand(); cursorGlow(); reveal(); spotlight(".feat");
 tilt(document.getElementById("tilt"));
-document.getElementById("yr").textContent = new Date().getFullYear();
 
 typer(document.getElementById("typed"), [
   "designer · night owl ✦", "building cool things", "lofi enjoyer 🎧", "say hi on discord"
@@ -83,11 +82,32 @@ emailForm.addEventListener("submit", async (e) => {
   } catch (err) { toast(authMessage(err), "bad"); }
   finally { btn.disabled = false; btn.textContent = "Masuk"; }
 });
-document.getElementById("forgotBtn").addEventListener("click", async () => {
+const forgotBox = document.getElementById("forgotBox");
+document.getElementById("forgotBtn").addEventListener("click", () => {
+  forgotBox.hidden = !forgotBox.hidden;
+  if (!emailForm.email.value) emailForm.email.focus();
+});
+const needEmail = () => {
   const email = emailForm.email.value.trim();
-  if (!email) { emailForm.email.focus(); return toast("Tulis email kamu dulu, lalu klik lagi.", "bad"); }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { emailForm.email.focus(); toast("Tulis email akunmu dulu di kolom Email.", "bad"); return ""; }
+  return email;
+};
+document.getElementById("forgotSelf").addEventListener("click", async () => {
+  const email = needEmail(); if (!email) return;
+  if (!configured) return toast("Mode demo.", "bad");
   try { await resetPassword(email); toast("Kalau email terdaftar, link reset sudah dikirim.", "ok"); }
   catch (err) { toast(authMessage(err), "bad"); }
+});
+document.getElementById("forgotAdmin").addEventListener("click", async () => {
+  const email = needEmail(); if (!email) return;
+  if (!configured) return toast("Mode demo.", "bad");
+  try {
+    await requestAdminReset(email, document.getElementById("forgotNote").value);
+    toast("Permintaan terkirim ke superadmin. Kamu akan menerima link reset lewat email.", "ok");
+    forgotBox.hidden = true; document.getElementById("forgotNote").value = "";
+  } catch (err) {
+    toast(err.code === "permission-denied" ? "Permintaan untuk email ini sudah ada dan sedang diproses." : authMessage(err), "bad");
+  }
 });
 
 // Daftar

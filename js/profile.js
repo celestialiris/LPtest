@@ -1,6 +1,6 @@
 import { loadPublic, addView, validUsername, SITE_NAME } from "./firebase.js";
 import { applyBrand } from "./ui.js";
-import { renderCard, applyBg } from "./card.js";
+import { renderCard, applyBg, applyVideoBg } from "./card.js";
 
 applyBrand();
 
@@ -25,7 +25,9 @@ function notFound(msg) {
   if (!p) return notFound(`<b>${name}</b> belum diklaim siapa pun.`);
 
   document.title = `${p.displayName || p.username} (@${p.username}) · ${SITE_NAME}`;
-  applyBg(document.getElementById("bg"), p.bg);
+  const video = applyVideoBg(document.body, p);
+  if (video) page.classList.add("has-video");
+  else applyBg(document.getElementById("bg"), p.bg);
   renderCard(card, p);
 
   // Hitung 1 view per sesi browser
@@ -34,5 +36,6 @@ function notFound(msg) {
 
   enter.addEventListener("click", () => {
     enter.classList.add("gone"); page.classList.add("entered");
+    if (video) video.play().catch(() => {});
   }, { once: true });
 })();

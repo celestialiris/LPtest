@@ -7,24 +7,29 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, runTransaction,
-  serverTimestamp, increment, collection, getCountFromServer, query, orderBy, limit, onSnapshot, where
+  serverTimestamp, increment, collection, getCountFromServer, query, orderBy, limit, onSnapshot, where, addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { deviceInfo } from "./device.js";
 import { firebaseConfig, SITE_NAME, SITE_DOMAIN, SUPERADMIN_EMAIL } from "../firebase-config.js";
 
 export { SITE_NAME, SITE_DOMAIN, SUPERADMIN_EMAIL };
 export const configured = !String(firebaseConfig.apiKey).startsWith("YOUR");
 
-let auth = null, db = null;
+let auth = null, db = null, storage = null;
 if (configured) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+  try { storage = getStorage(app); } catch (_) {}
 }
 
 export const USERNAME_RE = /^[a-z0-9_.]{2,20}$/;
 export const RESERVED = new Set([
   "admin", "api", "app", "login", "logout", "dashboard", "profile", "settings", "help",
-  "support", "about", "pricing", "terms", "privacy", "index", "404", "www", "root", "glint", "superadmin"
+  "support", "about", "pricing", "terms", "privacy", "index", "404", "www", "root", "glint", "bohye", "bohyepage", "superadmin", "developer", "official"
 ]);
 
 export function validUsername(n) {
@@ -36,12 +41,19 @@ export function onUser(cb) {
   return onAuthStateChanged(auth, cb);
 }
 
-export const logout = () => configured && signOut(auth);
+export async function logout() {
+  if (!configured) return;
+  if (auth.currentUser) { try { await logActivity("logout", auth.currentUser); } catch (_) {} }
+  return signOut(auth);
+}
 
 // ---------- Email & password ----------
 export async function signInEmail(email, password) {
   if (!configured) throw new Error("not-configured");
-  return signInWithEmailAndPassword(auth, email.trim(), password);
+  const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+  logActivity("login", cred.user);
+  touchMember(cred.user);
+  return cred;
 }
 
 // Daftar akun baru → simpan data anggota → kirim notifikasi ke superadmin
@@ -53,6 +65,7 @@ export async function signUpEmail(name, email, password) {
   if (name) { try { await updateProfile(user, { displayName: name.slice(0, 40) }); } catch (_) {} }
   try { await ensureMember(user, name); } catch (err) { console.warn("ensureMember:", err); }
   try { await sendEmailVerification(user); } catch (_) {}
+  logActivity("signup", user);
   return user;
 }
 
@@ -106,6 +119,7 @@ async function reauth(currentPassword) {
 export async function changePassword(currentPassword, newPassword) {
   const u = await reauth(currentPassword);
   await updatePassword(u, newPassword);
+  logActivity("password_change", u);
 }
 
 // "updated" bila langsung berubah, atau "verify" bila Firebase mengirim link verifikasi ke email baru.
@@ -114,6 +128,7 @@ export async function changeEmail(currentPassword, newEmail) {
   try {
     await updateEmail(u, newEmail.trim());
     try { await updateDoc(doc(db, "members", u.uid), { email: newEmail.trim() }); } catch (_) {}
+    logActivity("email_change", u);
     return "updated";
   } catch (err) {
     if (err.code === "auth/operation-not-allowed") {
@@ -225,6 +240,10 @@ export async function claim(name, user) {
       accent: "#a855f7",
       bg: "",
       links: [],
+      badges: [],
+      bgVideo: "",
+      bgVideoPath: "",
+      bgBlur: 6,
       views: 0,
       createdAt: serverTimestamp()
     });
@@ -233,6 +252,7 @@ export async function claim(name, user) {
 
 export async function saveProfile(uid, data) {
   await updateDoc(doc(db, "users", uid), data);
+  logActivity("profile_save");
 }
 
 export async function countUsers() {
@@ -246,7 +266,8 @@ export async function loadPublic(name) {
     return {
       uid: "demo", username: name || "demo", displayName: "Nova", views: 2841,
       bio: "designer · night owl · building cool things ✦",
-      avatar: "", accent: "#a855f7", bg: "",
+      avatar: "", accent: "#a855f7", bg: "", bgVideo: "", bgBlur: 6,
+      badges: ["verified", "developer", "gamer"],
       links: [
         { title: "GitHub", url: "https://github.com" },
         { title: "Instagram", url: "https://instagram.com" },
@@ -308,4 +329,126 @@ export function timeAgo(ts) {
   if (s < 3600) return `${Math.floor(s / 60)} menit lalu`;
   if (s < 86400) return `${Math.floor(s / 3600)} jam lalu`;
   return `${Math.floor(s / 86400)} hari lalu`;
+}
+
+// =====================================================================
+//  Pengaturan situs (tema & logo) — hanya superadmin yang bisa mengubah
+// =====================================================================
+export function watchSiteSettings(cb) {
+  if (!configured) { cb({}); return () => {}; }
+  return onSnapshot(doc(db, "settings", "site"), (s) => cb(s.exists() ? s.data() : {}), () => cb({}));
+}
+
+export async function saveSiteSettings(data) {
+  await setDoc(doc(db, "settings", "site"), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  logActivity("site_settings");
+}
+
+// =====================================================================
+//  Badge — hanya superadmin
+// =====================================================================
+export async function setBadges(uid, badges) {
+  await updateDoc(doc(db, "users", uid), { badges: [...new Set(badges)].slice(0, 12) });
+  logActivity("badge_update");
+}
+
+// =====================================================================
+//  Video background profil (Firebase Storage)
+// =====================================================================
+export const VIDEO_MAX_MB = 25;
+
+export function uploadBgVideo(uid, file, onProgress) {
+  if (!storage) return Promise.reject(new Error("Firebase Storage belum aktif."));
+  if (!/^video\/(mp4|webm|quicktime)$/.test(file.type)) return Promise.reject(new Error("Format harus MP4, WebM, atau MOV."));
+  if (file.size > VIDEO_MAX_MB * 1024 * 1024) return Promise.reject(new Error(`Ukuran maksimal ${VIDEO_MAX_MB} MB.`));
+  const ext = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" }[file.type];
+  const r = sref(storage, `videos/${uid}/background.${ext}`);
+  return new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(r, file, { contentType: file.type, cacheControl: "public,max-age=86400" });
+    task.on("state_changed",
+      (s) => onProgress?.(s.bytesTransferred / s.totalBytes),
+      reject,
+      async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        await updateDoc(doc(db, "users", uid), { bgVideo: url, bgVideoPath: r.fullPath });
+        logActivity("video_upload");
+        resolve(url);
+      });
+  });
+}
+
+export async function removeBgVideo(uid, path) {
+  if (path && storage) { try { await deleteObject(sref(storage, path)); } catch (_) {} }
+  await updateDoc(doc(db, "users", uid), { bgVideo: "", bgVideoPath: "" });
+}
+
+// =====================================================================
+//  Permintaan reset password
+//  Password tidak pernah bisa dilihat siapa pun (disimpan ter-hash oleh Firebase).
+//  Superadmin mengirim link reset resmi Firebase ke email anggota.
+// =====================================================================
+const reqId = (email) => email.trim().toLowerCase();
+
+export async function requestAdminReset(email, note = "") {
+  const id = reqId(email);
+  await setDoc(doc(db, "resetRequests", id), {
+    email: id, note: String(note).slice(0, 200), status: "pending", createdAt: serverTimestamp()
+  });
+}
+
+export function watchResetRequests(cb, onErr) {
+  const q = query(collection(db, "resetRequests"), orderBy("createdAt", "desc"), limit(100));
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onErr);
+}
+
+export async function adminSendReset(email, requestId) {
+  await sendPasswordResetEmail(auth, email.trim());
+  if (requestId) {
+    await updateDoc(doc(db, "resetRequests", requestId), { status: "done", handledAt: serverTimestamp() });
+  }
+  logActivity("admin_reset_sent");
+}
+
+export const dismissReset = (id) => deleteDoc(doc(db, "resetRequests", id));
+
+// =====================================================================
+//  Log aktivitas — perangkat, OS, browser, waktu, zona waktu (tanpa GPS/IP)
+// =====================================================================
+export const ACTIVITY_LABELS = {
+  signup: "Mendaftar", login: "Masuk", logout: "Keluar",
+  password_change: "Ganti password", email_change: "Ganti email",
+  profile_save: "Simpan profil", video_upload: "Upload video",
+  site_settings: "Ubah tema/logo", badge_update: "Ubah badge", admin_reset_sent: "Kirim link reset"
+};
+
+export async function logActivity(event, user = auth?.currentUser) {
+  if (!configured || !user || !ACTIVITY_LABELS[event]) return;
+  try {
+    await addDoc(collection(db, "activity"), {
+      uid: user.uid, email: user.email || "", event, ...deviceInfo(), at: serverTimestamp()
+    });
+  } catch (err) { console.warn("activity:", err.code || err.message); }
+}
+
+export function watchActivity(cb, onErr, max = 200) {
+  const q = query(collection(db, "activity"), orderBy("at", "desc"), limit(max));
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onErr);
+}
+
+export async function memberActivity(uid, max = 20) {
+  // Tanpa orderBy agar tidak butuh composite index; diurutkan di browser.
+  const snap = await getDocs(query(collection(db, "activity"), where("uid", "==", uid), limit(200)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.at?.toMillis?.() || 0) - (a.at?.toMillis?.() || 0)).slice(0, max);
+}
+
+// Catat waktu login terakhir & status verifikasi email di data anggota
+export async function touchMember(user) {
+  if (!configured || !user) return;
+  try {
+    await ensureMember(user);
+    await updateDoc(doc(db, "members", user.uid), {
+      email: user.email, emailVerified: !!user.emailVerified, lastLoginAt: serverTimestamp()
+    });
+  } catch (_) {}
 }

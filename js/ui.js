@@ -1,9 +1,24 @@
 import { configured, SITE_NAME, SITE_DOMAIN } from "./firebase.js";
+import { initSite } from "./site.js";
+import { initPwa } from "./pwa.js";
 
-// Nama & domain dari config
+export const APP_VERSION = self.APP_VERSION || "dev";
+export const APP_COPYRIGHT = self.APP_COPYRIGHT || "© Bohye 2026 Darkness 666";
+
+// Nama, domain, versi, copyright, tema/logo & PWA — dipanggil di setiap halaman
 export function applyBrand() {
   document.querySelectorAll("[data-site-name]").forEach((el) => (el.textContent = SITE_NAME));
   document.querySelectorAll("[data-site-domain]").forEach((el) => (el.textContent = SITE_DOMAIN));
+  document.querySelectorAll("[data-version]").forEach((el) => (el.textContent = "v" + APP_VERSION));
+  document.querySelectorAll("[data-copyright]").forEach((el) => (el.textContent = APP_COPYRIGHT));
+  if (!document.querySelector(".app-foot") && !document.querySelector("footer")) {
+    const f = document.createElement("div");
+    f.className = "app-foot";
+    f.innerHTML = `<span>${APP_COPYRIGHT}</span><span class="ver">v${APP_VERSION}</span>`;
+    document.body.append(f);
+  }
+  initSite();
+  initPwa();
   if (!configured && !document.querySelector(".demo-banner")) {
     const b = document.createElement("div");
     b.className = "demo-banner";

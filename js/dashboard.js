@@ -1,9 +1,10 @@
 import {
   configured, onUser, logout, getMyProfile, saveProfile, claim, isAvailable, validUsername,
-  profileUrl, toast, escapeHtml, loadPublic, hasPasswordLogin, changeEmail, changePassword, authMessage, ensureMember, isAdmin
+  profileUrl, toast, escapeHtml, loadPublic, uploadBgVideo, removeBgVideo, VIDEO_MAX_MB, hasPasswordLogin, changeEmail, changePassword, authMessage, ensureMember, isAdmin
 } from "./firebase.js";
 import { applyBrand, cursorGlow } from "./ui.js";
 import { renderCard } from "./card.js";
+import { badgesHtml } from "./badges.js";
 
 applyBrand(); cursorGlow();
 
@@ -40,6 +41,7 @@ function readForm() {
     avatar: String(f.get("avatar") || "").trim().slice(0, 500),
     bg: String(f.get("bg") || "").trim().slice(0, 500),
     accent: String(f.get("accent") || "#a855f7"),
+    bgBlur: Math.max(0, Math.min(20, parseInt(f.get("bgBlur"), 10) || 0)),
     links: [...linksBox.children].map((r) => ({
       title: r.querySelector(".t").value.trim().slice(0, 40),
       url: r.querySelector(".u").value.trim().slice(0, 300)
@@ -50,7 +52,8 @@ function readForm() {
 function update() {
   const data = readForm();
   $("bioCount").textContent = `${data.bio.length}/160`;
-  renderCard($("preview"), { ...profile, ...data });
+  $("blurVal").textContent = `${data.bgBlur} px`;
+  renderCard($("preview"), { ...profile, ...data }, { previewVideo: true });
 }
 form.addEventListener("input", update);
 
@@ -60,6 +63,9 @@ function fill(p) {
   form.avatar.value = p.avatar || "";
   form.bg.value = p.bg || "";
   form.accent.value = p.accent || "#a855f7";
+  form.bgBlur.value = Number.isFinite(+p.bgBlur) ? p.bgBlur : 6;
+  $("myBadges").innerHTML = badgesHtml(p.badges) || '<span style="color:var(--mute);font-size:.85rem">Belum ada badge.</span>';
+  syncVideo();
   linksBox.innerHTML = "";
   (p.links || []).forEach(linkRow);
   const url = profileUrl(p.username);
@@ -84,6 +90,45 @@ $("copyBtn").onclick = async () => {
   try { await navigator.clipboard.writeText($("shareUrl").textContent); toast("Link disalin!", "ok"); }
   catch { toast("Tidak bisa menyalin otomatis.", "bad"); }
 };
+
+// ---------- video background ----------
+function syncVideo() {
+  const has = !!profile?.bgVideo;
+  $("videoRow").hidden = !has;
+  if (has && $("videoThumb").src !== profile.bgVideo) $("videoThumb").src = profile.bgVideo;
+  if (!has) $("videoThumb").removeAttribute("src");
+}
+
+async function handleVideo(file) {
+  if (!file) return;
+  if (!configured) return toast("Mode demo: hubungkan Firebase untuk upload video.", "bad");
+  if (file.size > VIDEO_MAX_MB * 1024 * 1024) return toast(`Ukuran video maksimal ${VIDEO_MAX_MB} MB.`, "bad");
+  const prog = $("videoProg"), bar = prog.querySelector("i");
+  prog.hidden = false; bar.style.width = "0%";
+  try {
+    const url = await uploadBgVideo(user.uid, file, (p) => (bar.style.width = Math.round(p * 100) + "%"));
+    profile = { ...profile, bgVideo: url };
+    syncVideo(); update();
+    toast("Video background tersimpan ✓", "ok");
+  } catch (err) {
+    toast(err.code === "storage/unauthorized" ? "Upload ditolak — cek storage.rules." : (err.message || "Upload gagal."), "bad");
+  } finally { setTimeout(() => (prog.hidden = true), 600); $("videoFile").value = ""; }
+}
+
+$("videoFile").addEventListener("change", (e) => handleVideo(e.target.files[0]));
+const drop = $("videoDrop");
+["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => handleVideo(e.dataTransfer.files[0]));
+$("videoRemove").addEventListener("click", async () => {
+  if (!configured) return;
+  if (!confirm("Hapus video background?")) return;
+  try {
+    await removeBgVideo(user.uid, profile.bgVideoPath);
+    profile = { ...profile, bgVideo: "", bgVideoPath: "" };
+    syncVideo(); update(); toast("Video dihapus.", "ok");
+  } catch (err) { toast(authMessage(err), "bad"); }
+});
 
 // ---------- akun: ganti email & password ----------
 function renderAccount(u) {

@@ -1,6 +1,7 @@
 import {
-  configured, onUser, signIn, logout, isAvailable, validUsername, claim, getMyProfile,
-  countUsers, toast, escapeHtml, signInEmail, resetPassword, authMessage
+  configured, onUser, logout, isAvailable, validUsername, claim, getMyProfile,
+  countUsers, toast, escapeHtml, signInEmail, signUpEmail, resetPassword, authMessage,
+  isAdmin, ensureMember, SUPERADMIN_EMAIL
 } from "./firebase.js";
 import { applyBrand, cursorGlow, reveal, tilt, spotlight, typer, countUp } from "./ui.js";
 
@@ -31,44 +32,54 @@ new IntersectionObserver(async ([e], o) => {
   });
 }).observe(statsEl);
 
-// ---------- Auth & modal ----------
+// ---------- Auth & modal (Masuk / Daftar) ----------
 const modal = document.getElementById("loginModal");
-const openLogin = (sub) => {
-  if (sub) document.getElementById("loginSub").textContent = sub;
+const tabs = modal.querySelector(".tabs");
+function setTab(name) {
+  tabs.dataset.on = name;
+  tabs.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
+  modal.querySelectorAll("[data-pane]").forEach((p) => (p.hidden = p.dataset.pane !== name));
+  document.getElementById("loginTitle").textContent = name === "signup" ? "Buat akun baru" : "Selamat datang";
+  setTimeout(() => modal.querySelector(`[data-pane="${name}"] input[type=email]`)?.focus(), 50);
+}
+tabs.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => setTab(t.dataset.tab)));
+
+const openLogin = (tab = "login", sub) => {
+  document.getElementById("loginSub").textContent = sub || "Masuk atau buat akun untuk mengklaim username.";
+  setTab(tab);
   modal.classList.add("open");
 };
 const closeLogin = () => modal.classList.remove("open");
-document.querySelectorAll("[data-open-login]").forEach((b) => b.addEventListener("click", () => openLogin()));
+document.querySelectorAll("[data-open-login]").forEach((b) =>
+  b.addEventListener("click", () => openLogin(b.dataset.openLogin || "login")));
 modal.addEventListener("click", (e) => { if (e.target === modal || e.target.closest("[data-close]")) closeLogin(); });
 addEventListener("keydown", (e) => e.key === "Escape" && closeLogin());
 
-modal.querySelectorAll("[data-provider]").forEach((btn) =>
-  btn.addEventListener("click", async () => {
-    if (!configured) return toast("Isi firebase-config.js dulu untuk mengaktifkan login.", "bad");
-    btn.disabled = true;
-    try { await signIn(btn.dataset.provider); closeLogin(); }
-    catch (err) { toast(authMessage(err), "bad"); }
-    finally { btn.disabled = false; }
-  })
-);
-
-// Login email & password
-const emailForm = document.getElementById("emailForm");
-emailForm.querySelector(".pw-toggle").addEventListener("click", (e) => {
-  const pw = emailForm.password;
+modal.querySelectorAll(".pw-toggle").forEach((btn) => btn.addEventListener("click", () => {
+  const pw = btn.parentElement.querySelector("input");
   pw.type = pw.type === "password" ? "text" : "password";
-  e.currentTarget.classList.toggle("on", pw.type === "text");
-});
+  btn.classList.toggle("on", pw.type === "text");
+}));
+
+async function afterAuth(user) {
+  closeLogin();
+  if (sessionStorage.getItem("pendingClaim")) return; // klaim dilanjutkan oleh onUser
+  const admin = await isAdmin(user.uid) || user.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+  setTimeout(() => (location.href = admin ? "admin.html" : "dashboard.html"), 500);
+}
+
+// Masuk
+const emailForm = document.getElementById("emailForm");
 emailForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!configured) return toast("Isi firebase-config.js dulu untuk mengaktifkan login.", "bad");
   const btn = document.getElementById("emailBtn");
   btn.disabled = true; btn.textContent = "Masuk…";
   try {
-    await signInEmail(emailForm.email.value, emailForm.password.value);
-    emailForm.reset(); closeLogin();
+    const { user } = await signInEmail(emailForm.email.value, emailForm.password.value);
+    emailForm.reset();
     toast("Berhasil masuk ✓", "ok");
-    if (!sessionStorage.getItem("pendingClaim")) setTimeout(() => (location.href = "dashboard.html"), 500);
+    await afterAuth(user);
   } catch (err) { toast(authMessage(err), "bad"); }
   finally { btn.disabled = false; btn.textContent = "Masuk"; }
 });
@@ -79,14 +90,35 @@ document.getElementById("forgotBtn").addEventListener("click", async () => {
   catch (err) { toast(authMessage(err), "bad"); }
 });
 
+// Daftar
+const signupForm = document.getElementById("signupForm");
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!configured) return toast("Isi firebase-config.js dulu untuk mengaktifkan pendaftaran.", "bad");
+  const f = signupForm;
+  if (f.password.value !== f.confirm.value) return toast("Password dan ulangi password tidak sama.", "bad");
+  const btn = document.getElementById("signupBtn");
+  btn.disabled = true; btn.textContent = "Membuat akun…";
+  try {
+    const user = await signUpEmail(f.name.value.trim(), f.email.value, f.password.value);
+    f.reset();
+    toast("Akun dibuat ✓ Cek email untuk verifikasi.", "ok");
+    await afterAuth(user);
+  } catch (err) { toast(authMessage(err), "bad"); }
+  finally { btn.disabled = false; btn.textContent = "Buat akun"; }
+});
+
 let currentUser = null;
 const navRight = document.getElementById("navRight");
 
 onUser(async (user) => {
   currentUser = user;
   if (!user) return;
-  const photo = user.photoURL ? `<img class="avatar-sm" src="${escapeHtml(user.photoURL)}" alt="">` : "";
-  navRight.innerHTML = `<button class="btn btn-ghost" id="outBtn">Keluar</button><a class="btn btn-primary" href="dashboard.html">Dashboard</a>${photo}`;
+  ensureMember(user).catch(() => {});
+  const admin = await isAdmin(user.uid);
+  navRight.innerHTML = `<button class="btn btn-ghost" id="outBtn">Keluar</button>`
+    + (admin ? `<a class="btn btn-ghost" href="admin.html">Admin</a>` : "")
+    + `<a class="btn btn-primary" href="dashboard.html">Dashboard</a>`;
   document.getElementById("outBtn").onclick = () => logout().then(() => location.reload());
 
   // Lanjutkan klaim yang tertunda sebelum login
@@ -127,7 +159,7 @@ async function doClaim(name) {
   if (!configured) return toast("Mode demo: hubungkan Firebase untuk mengklaim username.", "bad");
   if (!currentUser) {
     sessionStorage.setItem("pendingClaim", name);
-    return openLogin(`Masuk untuk mengamankan "${name}".`);
+    return openLogin("signup", `Daftar atau masuk untuk mengamankan "${name}".`);
   }
   const btn = document.getElementById("claimBtn");
   btn.disabled = true; btn.textContent = "Mengklaim…";

@@ -1,6 +1,6 @@
 import {
   configured, onUser, logout, getMyProfile, saveProfile, claim, isAvailable, validUsername,
-  profileUrl, toast, escapeHtml, loadPublic, hasPasswordLogin, changeEmail, changePassword, authMessage
+  profileUrl, toast, escapeHtml, loadPublic, hasPasswordLogin, changeEmail, changePassword, authMessage, ensureMember, isAdmin
 } from "./firebase.js";
 import { applyBrand, cursorGlow } from "./ui.js";
 import { renderCard } from "./card.js";
@@ -154,6 +154,8 @@ if (!configured) {
     if (!u) { location.href = "index.html"; return; }
     user = u;
     renderAccount(u);
+    ensureMember(u).catch(() => {});
+    isAdmin(u.uid).then((a) => { if (a) $("adminBtn").hidden = false; });
     try {
       profile = await getMyProfile(u.uid);
       if (!profile) return show("noName");

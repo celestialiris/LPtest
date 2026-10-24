@@ -518,3 +518,79 @@ select.input { color: var(--txt) }
 .swatches button { width: 28px; height: 28px; border-radius: 9px; background: var(--c); border: 1px solid var(--line2); transition: transform .15s }
 .swatches button:hover { transform: scale(1.1) }
 .swatches button.on { outline: 2px solid var(--a1); outline-offset: 2px }
+
+/* ======================= v2.2: profil & video di tengah, pemutar mini ======================= */
+/* Profil selalu tepat di tengah layar (100dvh mengikuti tinggi layar HP yang sebenarnya) */
+.profile-page {
+  min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  padding: max(28px, env(safe-area-inset-top)) 16px max(96px, calc(env(safe-area-inset-bottom) + 96px));
+}
+.profile-stack { width: min(420px, 100%); display: flex; flex-direction: column; align-items: center; gap: 0; margin: auto }
+.profile-stack .mock { width: 100%; margin: 0 auto }
+.profile-stack .powered { margin-top: 22px }
+.profile-stack .app-foot { padding: 10px 0 0 }
+.profile-page .mock h3 { flex-wrap: wrap }
+
+/* Video: dipusatkan sempurna dan menutup layar (cover) */
+.profile-video { inset: -60px; display: block }
+.profile-video .yt-frame, .profile-video iframe {
+  position: absolute; top: 50%; left: 50%; border: 0; pointer-events: none;
+  width: max(100%, calc((100vh + 120px) * 16 / 9)); height: max(100%, calc((100vw + 120px) * 9 / 16));
+  transform: translate(-50%, -50%) scale(1.12); transform-origin: center center;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.profile-video.playing .yt-frame, .profile-video.playing iframe { opacity: 1 }
+/* Video vertikal (Shorts 9:16) */
+.profile-video.portrait .yt-frame, .profile-video.portrait iframe {
+  width: max(100%, calc((100vh + 120px) * 9 / 16)); height: max(100%, calc((100vw + 120px) * 16 / 9));
+}
+
+/* Layar "klik untuk masuk" */
+.enter-inner { display: grid; justify-items: center; gap: 10px }
+.enter small { font-family: Inter, sans-serif; font-size: .78rem; letter-spacing: .06em; color: #8b86a0; text-transform: none; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--line2); background: rgba(255, 255, 255, .04) }
+
+/* Pemutar mini */
+.mini-player {
+  position: fixed; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); z-index: 70;
+  display: flex; align-items: center; gap: 10px; width: min(440px, calc(100% - 28px)); padding: 8px 14px 8px 8px; border-radius: 999px;
+  background: rgba(12, 10, 18, .55); border: 1px solid rgba(255, 255, 255, .12);
+  backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .08);
+  translate: -50% 160%; opacity: 0; transition: translate .6s cubic-bezier(.2, .9, .3, 1.15) .3s, opacity .4s .3s;
+}
+.mini-player.show { translate: -50% 0; opacity: 1 }
+.mp-btn { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255, 255, 255, .08); transition: background .2s, transform .15s }
+.mp-btn:hover { background: rgba(255, 255, 255, .16) } .mp-btn:active { transform: scale(.92) }
+.mp-btn[data-act="toggle"] { background: var(--pa, var(--a1)); box-shadow: 0 0 20px color-mix(in srgb, var(--pa, var(--a1)) 55%, transparent) }
+.mp-btn svg { width: 18px; height: 18px }
+.mp-eq { display: flex; gap: 2px; align-items: flex-end; height: 14px; flex: none }
+.mp-eq i { width: 3px; height: 3px; border-radius: 2px; background: var(--pa, var(--a1)) }
+.mini-player.is-playing .mp-eq i { animation: eq 1s ease-in-out infinite }
+.mini-player.is-playing .mp-eq i:nth-child(2) { animation-delay: -.3s } .mini-player.is-playing .mp-eq i:nth-child(3) { animation-delay: -.6s } .mini-player.is-playing .mp-eq i:nth-child(4) { animation-delay: -.15s }
+.mp-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font-size: .84rem; font-weight: 500; color: #ece9f5;
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent) }
+.mp-title span { display: inline-block }
+.mp-title.scroll span { padding-right: 40px; animation: mpscroll 14s linear infinite }
+@keyframes mpscroll { 0%, 12% { transform: translateX(0) } 88%, 100% { transform: translateX(calc(-100% + 120px)) } }
+.mp-vol { width: 96px; flex: none; height: 4px; border-radius: 99px; appearance: none; -webkit-appearance: none; cursor: pointer;
+  background: linear-gradient(90deg, var(--pa, var(--a1)) var(--pct, 50%), rgba(255, 255, 255, .18) var(--pct, 50%)) }
+.mp-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--pa, var(--a1)) 35%, transparent) }
+.mp-vol::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff }
+.mini-player.ios .mp-vol { display: none }
+@media (max-width: 420px) { .mp-vol { width: 70px } .mp-eq { display: none } }
+.switch { display: inline-flex !important; align-items: center; gap: 10px; cursor: pointer; height: 46px; margin: 0 !important; color: var(--txt) !important }
+.switch input { position: absolute; opacity: 0; pointer-events: none }
+.switch span { width: 46px; height: 26px; border-radius: 99px; background: rgba(255, 255, 255, .12); border: 1px solid var(--line2); position: relative; transition: background .2s }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .25s cubic-bezier(.2, .9, .3, 1.2) }
+.switch input:checked + span { background: var(--a1) }
+.switch input:checked + span::after { transform: translateX(20px) }
+.switch input:focus-visible + span { outline: 2px solid var(--a1); outline-offset: 2px }
+.switch em { font-style: normal; font-size: .88rem }
+.range:disabled { opacity: .4 }
+/* Kartu profil tepat di tengah: teks di bawah kartu tidak ikut menggeser posisi */
+.profile-page { padding: 104px 16px }
+.profile-stack { position: relative }
+.profile-stack .powered, .profile-stack .app-foot { position: absolute; left: 0; right: 0; text-align: center }
+.profile-stack .powered { top: 100%; margin-top: 18px }
+.profile-stack .app-foot { top: 100%; margin-top: 44px; justify-content: center }
+.profile-stack .powered, .profile-stack .app-foot { text-shadow: 0 1px 8px rgba(0, 0, 0, .7) } .profile-stack .powered, .profile-stack .powered a { color: rgba(255, 255, 255, .75) } .profile-stack .app-foot { color: rgba(255, 255, 255, .6) }

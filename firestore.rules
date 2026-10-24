@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // usernames/{name} -> { uid }   (kunci unik username)
+    match /usernames/{name} {
+      allow read: if true;
+      allow create: if signedIn()
+        && name.matches('^[a-z0-9_.]{2,20}$')
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        // satu akun hanya boleh satu username, dan profil dibuat di transaksi yang sama
+        && !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == name;
+      allow update, delete: if false;
+    }
+
+    // users/{uid} -> data profil publik
+    match /users/{uid} {
+      allow read: if true;
+
+      function validProfile(d) {
+        return d.displayName is string && d.displayName.size() <= 40
+          && d.bio is string && d.bio.size() <= 160
+          && d.avatar is string && d.avatar.size() <= 500
+          && d.bg is string && d.bg.size() <= 500
+          && d.accent is string && d.accent.matches('^#[0-9a-fA-F]{6}$')
+          && d.links is list && d.links.size() <= 20;
+      }
+
+      allow create: if signedIn() && request.auth.uid == uid
+        && validProfile(request.resource.data)
+        && request.resource.data.views == 0
+        && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
+
+      // Pemilik boleh edit profil, tapi tidak boleh mengubah username / views
+      allow update: if (signedIn() && request.auth.uid == uid
+          && request.resource.data.username == resource.data.username
+          && request.resource.data.views == resource.data.views
+          && validProfile(request.resource.data))
+        // Pengunjung siapa pun hanya boleh menambah views sebesar 1
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+          && request.resource.data.views == resource.data.views + 1);
+
+      allow delete: if false;
+    }
+  }
+}

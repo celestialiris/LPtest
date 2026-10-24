@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>glint — satu link untuk semua tentang kamu</title>
+  <meta name="description" content="Buat halaman bio-link yang estetik dalam hitungan detik. Gratis, cepat, dan bisa dikustomisasi.">
+  <meta name="theme-color" content="#07060b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%236366f1'/%3E%3Cstop offset='.5' stop-color='%23a855f7'/%3E%3Cstop offset='1' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 7l2.2 6.8L25 16l-6.8 2.2L16 25l-2.2-6.8L7 16l6.8-2.2z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="grid-bg"></div>
+  <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+  <div class="cursor-glow" id="glow"></div>
+
+  <nav class="top">
+    <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <div class="links">
+      <a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-right" id="navRight">
+      <button class="btn btn-ghost" data-open-login>Masuk</button>
+      <button class="btn btn-primary" data-open-login>Daftar gratis</button>
+    </div>
+  </nav>
+
+  <header class="hero wrap">
+    <div class="pill reveal"><b>BARU</b> Profil dengan musik, efek, &amp; badge</div>
+    <h1 class="reveal">Satu link.<br><span class="grad-text">Semua tentang kamu.</span></h1>
+    <p class="sub reveal">Buat halaman bio yang estetik, cepat, dan benar-benar terasa milikmu. Gabungkan semua sosial media, karya, dan musikmu dalam satu tempat.</p>
+
+    <form class="claim reveal" id="claimForm" autocomplete="off">
+      <span class="prefix"><span data-site-domain>glint.lol</span>/</span>
+      <input id="claimInput" maxlength="20" spellcheck="false" aria-label="Username" placeholder="username">
+      <button class="btn btn-primary" type="submit" id="claimBtn">Klaim sekarang</button>
+    </form>
+    <div class="claim-status" id="claimStatus">Username 2–20 karakter: huruf kecil, angka, titik, atau underscore.</div>
+
+    <div class="stats reveal">
+      <div class="stat"><b data-count id="userCount">0</b><span>profil dibuat</span></div>
+      <div class="stat"><b data-count="3.2" data-suffix="jt">0</b><span>kunjungan profil</span></div>
+      <div class="stat"><b data-count="99.9" data-suffix="%">0</b><span>uptime</span></div>
+    </div>
+  </header>
+
+  <div class="showcase reveal">
+    <div class="mock" id="tilt">
+      <span class="float-tag t1">✦ 2.841 views</span>
+      <span class="float-tag t2">🎧 now playing</span>
+      <span class="float-tag t3">✓ verified</span>
+      <div class="views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>2,841</div>
+      <div class="ava"><div>N</div></div>
+      <h3>nova <svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.4.9 3 2.8 1.5-.9 3 1.5 2.8-2.6 1.8-.2 3.2-3.1.4L12 22l-2.4-2.1-3.1.4-.9-3-2.8-1.5.9-3L2.2 10l2.6-1.8.2-3.2 3.1-.4z"/><path d="M8 12l3 3 5-6" stroke="#0d0b14" stroke-width="2.2" fill="none"/></svg></h3>
+      <p class="bio typed" id="typed"></p>
+      <div class="socials">
+        <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.6 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></span>
+        <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.8 19.8 0 0015.4 3l-.6 1.3a18.4 18.4 0 00-5.6 0L8.6 3a19.7 19.7 0 00-4.9 1.4C.6 9 0 13.6.3 18.1a19.9 19.9 0 006 3l1.3-2a12.9 12.9 0 01-2-1l.5-.4a14.2 14.2 0 0012 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.8 19.8 0 006-3c.5-5.2-.8-9.7-3.6-13.7zM8.5 15.3c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm7 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.1-6.7L5.4 22H2.3l7.7-8.8L2 2h6.8l4.6 6.1zm-1.2 18h1.7L7.4 3.9H5.6z"/></svg></span>
+      </div>
+      <a class="lnk" href="#">🌐 Portfolio</a>
+      <a class="lnk" href="#">🛍️ Shop my setup</a>
+      <div class="music"><div class="cover"></div><div><b style="font-size:.88rem">midnight drive</b><small>lofi · 2:47</small></div><div class="bars"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+  </div>
+
+  <div class="marquee"><div class="track" id="marquee"></div></div>
+
+  <section class="block wrap" id="fitur">
+    <div class="head reveal">
+      <div class="eyebrow">Fitur</div>
+      <h2>Semua yang kamu butuhkan, <span class="grad-text">tanpa ribet</span></h2>
+      <p>Dirancang untuk kreator, gamer, developer — siapa saja yang ingin tampil beda.</p>
+    </div>
+    <div class="features">
+      <div class="feat wide reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg></div><h3>Kustomisasi penuh</h3><p>Warna aksen, background gambar, avatar, efek glow, dan layout. Profilmu, aturanmu — ubah apa pun dan lihat hasilnya secara langsung.</p></div>
+      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div><h3>Super cepat</h3><p>Halaman statis + Firebase. Terbuka dalam sekejap di HP mana pun.</p></div>
+      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>Statistik views</h3><p>Lihat berapa banyak orang yang mampir ke profilmu, real-time.</p></div>
+      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></div><h3>Link tanpa batas</h3><p>Tambahkan sosial media, toko, portfolio, dan apa pun yang penting.</p></div>
+      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><h3>Login aman</h3><p>Masuk dengan GitHub atau Google. Tanpa password baru untuk diingat.</p></div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="cara">
+    <div class="head reveal">
+      <div class="eyebrow">Cara kerja</div>
+      <h2>Online dalam <span class="grad-text">60 detik</span></h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><h3>Klaim username</h3><p>Pilih nama unik yang belum dipakai orang lain — siapa cepat, dia dapat.</p></div>
+      <div class="step reveal"><h3>Masuk sekali klik</h3><p>Hubungkan akun GitHub atau Google kamu. Selesai, tanpa formulir panjang.</p></div>
+      <div class="step reveal"><h3>Desain &amp; bagikan</h3><p>Atur bio, link, dan warna, lalu tempel linkmu di bio Instagram, TikTok, atau Discord.</p></div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="harga">
+    <div class="head reveal">
+      <div class="eyebrow">Harga</div>
+      <h2>Gratis selamanya. <span class="grad-text">Premium kalau mau.</span></h2>
+    </div>
+    <div class="pricing">
+      <div class="plan reveal">
+        <h3>Free</h3>
+        <div class="price">Rp0 <small>/ selamanya</small></div>
+        <p>Semua dasar untuk mulai tampil keren.</p>
+        <ul><li>Username unik</li><li>Link tak terbatas</li><li>Warna aksen &amp; background</li><li>Statistik views</li></ul>
+        <button class="btn btn-ghost" data-open-login>Mulai gratis</button>
+      </div>
+      <div class="plan pro reveal">
+        <span class="tag">Populer</span>
+        <h3>Premium</h3>
+        <div class="price">Rp29rb <small>/ sekali bayar</small></div>
+        <p>Untuk kamu yang ingin tampil paling beda.</p>
+        <ul><li>Semua fitur Free</li><li>Badge verified ✦</li><li>Pemutar musik di profil</li><li>Efek kursor &amp; partikel</li><li>Domain kustom</li></ul>
+        <button class="btn btn-primary" data-open-login>Upgrade</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="faq">
+    <div class="head reveal">
+      <div class="eyebrow">FAQ</div>
+      <h2>Pertanyaan umum</h2>
+    </div>
+    <div class="faq">
+      <details class="reveal"><summary>Apakah benar-benar gratis?</summary><p>Ya. Paket Free tidak punya batas waktu dan sudah mencakup link tak terbatas serta statistik views.</p></details>
+      <details class="reveal"><summary>Bisakah saya mengganti username?</summary><p>Satu akun mendapat satu username. Pilih baik-baik — username yang sudah diklaim langsung dikunci untukmu.</p></details>
+      <details class="reveal"><summary>Data saya disimpan di mana?</summary><p>Profil disimpan di Google Firebase (Firestore) dan hanya bisa diubah oleh pemilik akun setelah login.</p></details>
+      <details class="reveal"><summary>Bisa dipakai di Instagram atau TikTok?</summary><p>Tentu. Salin link profilmu dari dashboard lalu tempel di kolom bio aplikasi mana saja.</p></details>
+    </div>
+  </section>
+
+  <div class="cta reveal">
+    <h2>Siap tampil <span class="grad-text">beda?</span></h2>
+    <p>Bergabung dengan ribuan kreator lain. Username terbaik cepat habis.</p>
+    <a href="#" class="btn btn-primary" id="ctaBtn" style="padding:14px 28px;font-size:1rem">Klaim username kamu →</a>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <a href="#" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+      <div class="fl"><a href="#fitur">Fitur</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><a href="https://github.com" target="_blank" rel="noopener">GitHub</a></div>
+      <span>© <span id="yr"></span> <span data-site-name>glint</span>. Dibuat dengan ✦</span>
+    </div>
+  </footer>
+
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="box">
+      <button class="close" data-close aria-label="Tutup">×</button>
+      <span class="logo" style="justify-content:center"><span class="mark" style="width:44px;height:44px;border-radius:14px"><svg viewBox="0 0 24 24" fill="#fff" style="width:22px;height:22px"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span></span>
+      <h3 id="loginTitle">Selamat datang</h3>
+      <p id="loginSub">Masuk untuk mengklaim username dan membuat profilmu.</p>
+      <button class="btn btn-github" data-provider="github"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.6 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z"/></svg>Lanjut dengan GitHub</button>
+      <button class="btn btn-ghost" data-provider="google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.5 5.5 0 01-2.4 3.6v3h3.9c2.2-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 010-4.6V6.6H1.3a12 12 0 000 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 001.3 6.6l4 3.1c.9-2.8 3.6-4.9 6.7-4.9z"/></svg>Lanjut dengan Google</button>
+      <div class="fine">Dengan masuk, kamu menyetujui Ketentuan &amp; Kebijakan Privasi.</div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

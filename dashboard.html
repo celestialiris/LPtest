@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · glint</title>
+  <meta name="theme-color" content="#07060b">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="grid-bg"></div>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="cursor-glow" id="glow"></div>
+
+  <nav class="top">
+    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <div class="nav-right">
+      <a class="btn btn-ghost" id="viewBtn" href="#" target="_blank" rel="noopener" hidden>Lihat profil ↗</a>
+      <button class="btn btn-ghost" id="outBtn">Keluar</button>
+    </div>
+  </nav>
+
+  <div id="loading" class="center-state"><p style="color:var(--mute)">Memuat dashboard…</p></div>
+
+  <!-- Belum punya username -->
+  <div id="noName" class="center-state" hidden>
+    <div class="panel" style="max-width:480px;width:100%">
+      <h2>Klaim username dulu</h2>
+      <p>Akunmu belum punya username. Pilih satu untuk mulai.</p>
+      <form class="claim" id="claimForm" style="margin:0">
+        <span class="prefix"><span data-site-domain>glint.lol</span>/</span>
+        <input id="claimInput" maxlength="20" placeholder="username" spellcheck="false">
+        <button class="btn btn-primary">Klaim</button>
+      </form>
+    </div>
+  </div>
+
+  <main class="wrap dash" id="dash" hidden>
+    <section class="panel">
+      <h2>Edit profil</h2>
+      <p>Perubahan langsung terlihat di preview. Jangan lupa simpan.</p>
+      <form id="editForm">
+        <div class="row">
+          <div class="field"><label>Nama tampilan</label><input class="input" name="displayName" maxlength="40"></div>
+          <div class="field" style="flex:.45"><label>Warna aksen</label><input class="input color-in" type="color" name="accent"></div>
+        </div>
+        <div class="field"><label>Bio <span id="bioCount" style="float:right">0/160</span></label><textarea class="input" name="bio" maxlength="160" placeholder="ceritakan sedikit tentang kamu…"></textarea></div>
+        <div class="field"><label>URL avatar</label><input class="input" name="avatar" placeholder="https://…/foto.jpg"></div>
+        <div class="field"><label>URL background (opsional)</label><input class="input" name="bg" placeholder="https://…/background.jpg"></div>
+
+        <div class="field">
+          <label>Link (maks. 20)</label>
+          <div id="links"></div>
+          <button type="button" class="btn btn-ghost" id="addLink" style="width:100%;border-style:dashed">+ Tambah link</button>
+        </div>
+
+        <div class="dash-actions">
+          <button class="btn btn-primary" id="saveBtn" type="submit">Simpan perubahan</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="sticky">
+      <div class="mock" id="preview" style="margin:0 auto"></div>
+      <div class="share"><span id="shareUrl"></span><button class="btn btn-ghost" id="copyBtn" style="padding:7px 14px">Salin</button></div>
+    </aside>
+  </main>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

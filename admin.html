@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Superadmin · glint</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#07060b">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="grid-bg"></div>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="cursor-glow" id="glow"></div>
+
+  <nav class="top">
+    <a href="index.html" class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span><span data-site-name>glint</span></a>
+    <div class="nav-right">
+      <button class="btn btn-ghost bell" id="bellBtn" title="Notifikasi" hidden>🔔<span class="count" id="bellCount" hidden>0</span></button>
+      <a class="btn btn-ghost" href="dashboard.html" id="acctBtn" hidden>Akun saya</a>
+      <button class="btn btn-ghost" id="outBtn" hidden>Keluar</button>
+    </div>
+  </nav>
+
+  <div id="loading" class="center-state"><p style="color:var(--mute)">Memeriksa akses…</p></div>
+
+  <div id="needLogin" class="center-state" hidden>
+    <div class="panel" style="max-width:420px;width:100%">
+      <span class="role">Superadmin</span>
+      <h2>Masuk sebagai superadmin</h2>
+      <p>Gunakan email &amp; password akun superadmin.</p>
+      <form id="adminLogin" class="email-form">
+        <input class="input" type="email" name="email" placeholder="Email" autocomplete="username" required>
+        <input class="input" type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+        <button class="btn btn-primary" type="submit">Masuk</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="denied" class="center-state" hidden>
+    <div class="panel" style="max-width:440px;width:100%">
+      <h2>Akses ditolak</h2>
+      <p>Akun <b id="deniedEmail"></b> bukan superadmin.</p>
+      <div class="dash-actions" style="justify-content:center"><a class="btn btn-ghost" href="dashboard.html">Ke dashboard</a><button class="btn btn-ghost" id="outBtn2">Keluar</button></div>
+    </div>
+  </div>
+
+  <main class="wrap admin" id="admin" hidden>
+    <div class="admin-head">
+      <div>
+        <span class="role">✦ Superadmin</span>
+        <h1>Panel <span class="grad-text">admin</span></h1>
+        <p>Masuk sebagai <b id="adminEmail"></b></p>
+      </div>
+      <button class="btn btn-ghost" id="pushBtn">🔔 Aktifkan notifikasi browser</button>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span>Total anggota</span><b id="kMembers">0</b></div>
+      <div class="kpi"><span>Profil dibuat</span><b id="kProfiles">0</b></div>
+      <div class="kpi"><span>Total views</span><b id="kViews">0</b></div>
+      <div class="kpi hot"><span>Notifikasi belum dibaca</span><b id="kUnread">0</b></div>
+    </div>
+
+    <div class="admin-grid">
+      <section class="panel" id="notifPanel">
+        <div class="panel-head">
+          <h2>Pendaftaran baru <span style="color:var(--mute);font-size:.8rem;font-weight:500">· live</span></h2>
+          <button class="btn btn-ghost" id="readAll">Tandai semua dibaca</button>
+        </div>
+        <div class="notif-list" id="notifs"><div class="empty">Memuat…</div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Anggota</h2>
+          <button class="btn btn-ghost" id="refresh">↻ Muat ulang</button>
+        </div>
+        <input class="input search" id="search" placeholder="Cari email, nama, atau username…">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Email</th><th>Nama</th><th>Username</th><th>Bergabung</th><th style="text-align:right">Views</th><th></th></tr></thead>
+            <tbody id="rows"><tr><td colspan="6" class="empty">Memuat…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

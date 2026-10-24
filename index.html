@@ -21,8 +21,8 @@
       <a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right" id="navRight">
-      <button class="btn btn-ghost" data-open-login>Masuk</button>
-      <button class="btn btn-primary" data-open-login>Daftar gratis</button>
+      <button class="btn btn-ghost" data-open-login="login">Masuk</button>
+      <button class="btn btn-primary" data-open-login="signup">Daftar gratis</button>
     </div>
   </nav>
 
@@ -79,7 +79,7 @@
       <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div><h3>Super cepat</h3><p>Halaman statis + Firebase. Terbuka dalam sekejap di HP mana pun.</p></div>
       <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>Statistik views</h3><p>Lihat berapa banyak orang yang mampir ke profilmu, real-time.</p></div>
       <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></div><h3>Link tanpa batas</h3><p>Tambahkan sosial media, toko, portfolio, dan apa pun yang penting.</p></div>
-      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><h3>Login aman</h3><p>Masuk dengan GitHub atau Google. Tanpa password baru untuk diingat.</p></div>
+      <div class="feat reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><h3>Akun aman</h3><p>Daftar dengan email milikmu sendiri. Email &amp; password bisa diganti kapan saja.</p></div>
     </div>
   </section>
 
@@ -90,7 +90,7 @@
     </div>
     <div class="steps">
       <div class="step reveal"><h3>Klaim username</h3><p>Pilih nama unik yang belum dipakai orang lain — siapa cepat, dia dapat.</p></div>
-      <div class="step reveal"><h3>Masuk sekali klik</h3><p>Hubungkan akun GitHub atau Google kamu. Selesai, tanpa formulir panjang.</p></div>
+      <div class="step reveal"><h3>Daftar dengan email</h3><p>Cukup email dan password. Selesai dalam hitungan detik, tanpa formulir panjang.</p></div>
       <div class="step reveal"><h3>Desain &amp; bagikan</h3><p>Atur bio, link, dan warna, lalu tempel linkmu di bio Instagram, TikTok, atau Discord.</p></div>
     </div>
   </section>
@@ -106,7 +106,7 @@
         <div class="price">Rp0 <small>/ selamanya</small></div>
         <p>Semua dasar untuk mulai tampil keren.</p>
         <ul><li>Username unik</li><li>Link tak terbatas</li><li>Warna aksen &amp; background</li><li>Statistik views</li></ul>
-        <button class="btn btn-ghost" data-open-login>Mulai gratis</button>
+        <button class="btn btn-ghost" data-open-login="signup">Mulai gratis</button>
       </div>
       <div class="plan pro reveal">
         <span class="tag">Populer</span>
@@ -114,7 +114,7 @@
         <div class="price">Rp29rb <small>/ sekali bayar</small></div>
         <p>Untuk kamu yang ingin tampil paling beda.</p>
         <ul><li>Semua fitur Free</li><li>Badge verified ✦</li><li>Pemutar musik di profil</li><li>Efek kursor &amp; partikel</li><li>Domain kustom</li></ul>
-        <button class="btn btn-primary" data-open-login>Upgrade</button>
+        <button class="btn btn-primary" data-open-login="signup">Upgrade</button>
       </div>
     </div>
   </section>
@@ -151,8 +151,15 @@
       <button class="close" data-close aria-label="Tutup">×</button>
       <span class="logo" style="justify-content:center"><span class="mark" style="width:44px;height:44px;border-radius:14px"><svg viewBox="0 0 24 24" fill="#fff" style="width:22px;height:22px"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span></span>
       <h3 id="loginTitle">Selamat datang</h3>
-      <p id="loginSub">Masuk untuk mengklaim username dan membuat profilmu.</p>
-      <form id="emailForm" class="email-form" autocomplete="on">
+      <p id="loginSub">Masuk atau buat akun untuk mengklaim username.</p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab on" data-tab="login" role="tab">Masuk</button>
+        <button type="button" class="tab" data-tab="signup" role="tab">Daftar</button>
+        <span class="tab-ind"></span>
+      </div>
+
+      <form id="emailForm" class="email-form" data-pane="login" autocomplete="on">
         <input class="input" type="email" name="email" placeholder="Email" autocomplete="username" required>
         <div class="pw-wrap">
           <input class="input" type="password" name="password" placeholder="Password" autocomplete="current-password" required minlength="6">
@@ -161,10 +168,18 @@
         <button class="btn btn-primary" type="submit" id="emailBtn">Masuk</button>
         <button type="button" class="link-btn" id="forgotBtn">Lupa password?</button>
       </form>
-      <div class="divider"><span>atau</span></div>
-      <button class="btn btn-github" data-provider="github"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.6 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z"/></svg>Lanjut dengan GitHub</button>
-      <button class="btn btn-ghost" data-provider="google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.5 5.5 0 01-2.4 3.6v3h3.9c2.2-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 010-4.6V6.6H1.3a12 12 0 000 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 001.3 6.6l4 3.1c.9-2.8 3.6-4.9 6.7-4.9z"/></svg>Lanjut dengan Google</button>
-      <div class="fine">Dengan masuk, kamu menyetujui Ketentuan &amp; Kebijakan Privasi.</div>
+
+      <form id="signupForm" class="email-form" data-pane="signup" autocomplete="on" hidden>
+        <input class="input" type="text" name="name" placeholder="Nama (opsional)" maxlength="40" autocomplete="name">
+        <input class="input" type="email" name="email" placeholder="Email aktif kamu" autocomplete="email" required>
+        <div class="pw-wrap">
+          <input class="input" type="password" name="password" placeholder="Password (min. 6 karakter)" autocomplete="new-password" required minlength="6">
+          <button type="button" class="pw-toggle" aria-label="Tampilkan password">👁</button>
+        </div>
+        <input class="input" type="password" name="confirm" placeholder="Ulangi password" autocomplete="new-password" required minlength="6">
+        <button class="btn btn-primary" type="submit" id="signupBtn">Buat akun</button>
+      </form>
+      <div class="fine">Dengan masuk atau mendaftar, kamu menyetujui Ketentuan &amp; Kebijakan Privasi.</div>
     </div>
   </div>
 

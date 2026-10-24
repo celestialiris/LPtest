@@ -3,21 +3,77 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function myEmail() { return request.auth.token.email; }
 
-    // usernames/{name} -> { uid }   (kunci unik username)
+    // Email superadmin awal — HARUS sama dengan SUPERADMIN_EMAIL di firebase-config.js.
+    // Hanya dipakai sekali (saat bootstrap); setelah itu hak admin terikat ke UID.
+    function bootstrapEmail() { return 'asdf@asdf.com'; }
+
+    // ---------- superadmin ----------
+    // meta/admin mengunci bootstrap supaya hanya bisa terjadi satu kali.
+    match /meta/admin {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && myEmail().lower() == bootstrapEmail()
+        && request.resource.data.uid == request.auth.uid
+        && existsAfter(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow update, delete: if false;
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+        && myEmail().lower() == bootstrapEmail()
+        && !exists(/databases/$(database)/documents/meta/admin)
+        && getAfter(/databases/$(database)/documents/meta/admin).data.uid == uid;
+      allow update, delete: if false;
+    }
+
+    // ---------- anggota (data privat: email) ----------
+    match /members/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email', 'name', 'createdAt'])
+        && request.resource.data.email == myEmail()
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email'])
+        && request.resource.data.email == myEmail();
+      allow delete: if isAdmin();
+    }
+
+    // ---------- notifikasi pendaftaran untuk superadmin ----------
+    // ID dokumen = UID pendaftar, jadi satu akun hanya bisa membuat satu notifikasi.
+    match /notifications/{uid} {
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['type', 'uid', 'email', 'name', 'read', 'createdAt'])
+        && request.resource.data.type == 'signup'
+        && request.resource.data.uid == uid
+        && request.resource.data.email == myEmail()
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40
+        && request.resource.data.read == false
+        && request.resource.data.createdAt == request.time;
+    }
+
+    // ---------- username unik ----------
     match /usernames/{name} {
       allow read: if true;
       allow create: if signedIn()
         && name.matches('^[a-z0-9_.]{2,20}$')
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == request.auth.uid
-        // satu akun hanya boleh satu username, dan profil dibuat di transaksi yang sama
         && !exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == name;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
-    // users/{uid} -> data profil publik
+    // ---------- profil publik ----------
     match /users/{uid} {
       allow read: if true;
 
@@ -35,16 +91,14 @@ service cloud.firestore {
         && request.resource.data.views == 0
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
 
-      // Pemilik boleh edit profil, tapi tidak boleh mengubah username / views
       allow update: if (signedIn() && request.auth.uid == uid
           && request.resource.data.username == resource.data.username
           && request.resource.data.views == resource.data.views
           && validProfile(request.resource.data))
-        // Pengunjung siapa pun hanya boleh menambah views sebesar 1
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
           && request.resource.data.views == resource.data.views + 1);
 
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
   }
 }

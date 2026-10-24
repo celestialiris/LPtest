@@ -70,7 +70,25 @@
             <div style="flex:1;font-size:.85rem;color:var(--mute)" id="ytStatus">Video siap dipakai.</div>
             <button type="button" class="btn btn-ghost" id="ytClear" style="padding:7px 12px;font-size:.8rem">Hapus</button>
           </div>
-          <p style="font-size:.78rem;color:var(--mute);margin-top:6px">Tempel link video, Shorts, atau live. Diputar otomatis tanpa suara &amp; berulang. Klik <b>Simpan perubahan</b> setelahnya.</p>
+          <p style="font-size:.78rem;color:var(--mute);margin-top:6px">Tempel link video, Shorts, atau live. Diputar berulang di tengah layar, suara bisa diatur di bawah. Klik <b>Simpan perubahan</b> setelahnya.</p>
+        </div>
+        <div class="field video-opts" id="videoOpts">
+          <div class="row">
+            <div class="field" style="margin:0">
+              <label>Bentuk video</label>
+              <select class="input" name="videoShape">
+                <option value="landscape">Landscape 16:9</option>
+                <option value="portrait">Vertikal 9:16 (Shorts)</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label>Suara video</label>
+              <label class="switch"><input type="checkbox" name="videoSound" checked><span></span><em>Aktif</em></label>
+            </div>
+          </div>
+          <label style="margin-top:14px">Volume awal <span id="volVal" style="float:right">50%</span></label>
+          <input class="range" type="range" name="videoVolume" min="0" max="100" step="1" value="50">
+          <p style="font-size:.78rem;color:var(--mute);margin-top:6px">Suara mulai saat pengunjung klik "klik untuk masuk". Pengunjung tetap bisa mengatur volume sendiri lewat pemutar mini.</p>
         </div>
         <div class="field">
           <label>Efek blur background <span id="blurVal" style="float:right">6 px</span></label>

@@ -1,4 +1,4 @@
-# ✦ Bohye Page — v2.1.0
+# ✦ Bohye Page — v2.2.0
 
 Situs bio-link dengan Firebase (Auth & Firestore), di-host di GitHub Pages, dan bisa dipasang sebagai aplikasi (PWA) di Android, iOS & PC.
 
@@ -18,7 +18,7 @@ LPtest/
 ├── firestore.rules       aturan database
 ├── css/  style.css, themes.css
 ├── icons/
-└── js/   firebase.js  ui.js  site.js  pwa.js  device.js  badges.js  youtube.js  card.js
+└── js/   firebase.js  ui.js  site.js  pwa.js  device.js  badges.js  youtube.js  player-ui.js  card.js
           app.js  dashboard.js  profile.js  admin.js  theme-boot.js  redirect.js
 ```
 
@@ -66,7 +66,7 @@ Superadmin otomatis mendapat badge **Verified** + **Developer**.
 Verified, Developer, Gamer, Technician, Creator, Moderator, VIP, Streamer, Musician, Artist, Supporter, OG Member. Hanya superadmin yang bisa memberi/mencabut. Tambah badge baru di `js/badges.js`.
 
 ### Anggota
-Daftar dengan email sendiri, klaim username, atur profil, pasang **video background dari link YouTube** (video biasa, Shorts, atau live; otomatis tanpa suara & berulang), **slider blur 0–20 px**, dan **backdrop** berupa lapisan warna pilihan dengan **transparansi 0–100%**. Lupa password → kirim link sendiri, atau **minta bantuan superadmin**.
+Daftar dengan email sendiri, klaim username, atur profil, pasang **video background dari link YouTube** (video biasa, Shorts, atau live; berulang, selalu di tengah layar, bentuk landscape 16:9 atau vertikal 9:16), **suara video** yang menyala saat pengunjung klik "klik untuk masuk" dengan **volume awal** yang bisa diatur — pengunjung juga dapat pemutar mini untuk play/pause, mute & volume (di iPhone volume mengikuti tombol fisik HP), **slider blur 0–20 px**, dan **backdrop** berupa lapisan warna pilihan dengan **transparansi 0–100%**. Lupa password → kirim link sendiri, atau **minta bantuan superadmin**.
 
 ### PWA
 - **Android / PC (Chrome, Edge):** muncul tombol **Pasang** otomatis, atau klik "📲 Pasang aplikasi" di footer.

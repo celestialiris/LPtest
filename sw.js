@@ -6,7 +6,7 @@ const CORE = [
   "./", "index.html", "dashboard.html", "admin.html", "profile.html", "404.html",
   "css/style.css", "css/themes.css", "version.js", "firebase-config.js", "manifest.webmanifest",
   "js/theme-boot.js", "js/firebase.js", "js/ui.js", "js/site.js", "js/pwa.js", "js/device.js",
-  "js/badges.js", "js/youtube.js", "js/card.js", "js/app.js", "js/dashboard.js", "js/profile.js", "js/admin.js",
+  "js/badges.js", "js/youtube.js", "js/player-ui.js", "js/card.js", "js/app.js", "js/dashboard.js", "js/profile.js", "js/admin.js",
   "js/redirect.js",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"
 ];

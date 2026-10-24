@@ -86,7 +86,7 @@ service cloud.firestore {
       function validProfile(d) {
         return d.keys().hasOnly(['username', 'displayName', 'bio', 'avatar', 'accent', 'bg', 'links', 'views',
                                  'createdAt', 'badges', 'bgYoutube', 'bgBlur', 'overlayColor', 'overlayOpacity',
-                                 'bgVideo', 'bgVideoPath'])
+                                 'videoShape', 'videoSound', 'videoVolume', 'bgVideo', 'bgVideoPath'])
           && d.displayName is string && d.displayName.size() <= 40
           && d.bio is string && d.bio.size() <= 160
           && okUrl(d.avatar) && okUrl(d.bg)
@@ -99,6 +99,10 @@ service cloud.firestore {
           // backdrop: warna hex + transparansi 0–100
           && d.get('overlayColor', '#000000').matches('^#[0-9a-fA-F]{6}$')
           && d.get('overlayOpacity', 35) is number && d.get('overlayOpacity', 35) >= 0 && d.get('overlayOpacity', 35) <= 100
+          // pengaturan pemutar video
+          && d.get('videoShape', 'landscape') in ['landscape', 'portrait']
+          && d.get('videoSound', true) is bool
+          && d.get('videoVolume', 50) is number && d.get('videoVolume', 50) >= 0 && d.get('videoVolume', 50) <= 100
           // field lama dari versi upload video: hanya boleh dikosongkan
           && d.get('bgVideo', '') == '' && d.get('bgVideoPath', '') == '';
       }

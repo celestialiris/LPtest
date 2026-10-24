@@ -85,7 +85,8 @@ service cloud.firestore {
       }
       function validProfile(d) {
         return d.keys().hasOnly(['username', 'displayName', 'bio', 'avatar', 'accent', 'bg', 'links', 'views',
-                                 'createdAt', 'badges', 'bgVideo', 'bgVideoPath', 'bgBlur'])
+                                 'createdAt', 'badges', 'bgYoutube', 'bgBlur', 'overlayColor', 'overlayOpacity',
+                                 'bgVideo', 'bgVideoPath'])
           && d.displayName is string && d.displayName.size() <= 40
           && d.bio is string && d.bio.size() <= 160
           && okUrl(d.avatar) && okUrl(d.bg)
@@ -93,9 +94,13 @@ service cloud.firestore {
           && d.links is list && d.links.size() <= 20
           && d.get('badges', []) is list && d.get('badges', []).size() <= 12
           && d.get('bgBlur', 6) is number && d.get('bgBlur', 6) >= 0 && d.get('bgBlur', 6) <= 20
-          // video hanya boleh dari Firebase Storage milik sendiri
-          && (d.get('bgVideo', '') == '' || d.get('bgVideo', '').matches('^https://firebasestorage[.]googleapis[.]com/.+'))
-          && (d.get('bgVideoPath', '') == '' || d.get('bgVideoPath', '').matches('^videos/' + uid + '/[^/]+$'));
+          // video background = ID YouTube (11 karakter) atau kosong
+          && (d.get('bgYoutube', '') == '' || d.get('bgYoutube', '').matches('^[A-Za-z0-9_-]{11}$'))
+          // backdrop: warna hex + transparansi 0–100
+          && d.get('overlayColor', '#000000').matches('^#[0-9a-fA-F]{6}$')
+          && d.get('overlayOpacity', 35) is number && d.get('overlayOpacity', 35) >= 0 && d.get('overlayOpacity', 35) <= 100
+          // field lama dari versi upload video: hanya boleh dikosongkan
+          && d.get('bgVideo', '') == '' && d.get('bgVideoPath', '') == '';
       }
 
       allow create: if signedIn() && request.auth.uid == uid

@@ -1,6 +1,6 @@
-# ✦ Bohye Page — v2.0.0
+# ✦ Bohye Page — v2.1.0
 
-Situs bio-link dengan Firebase (Auth, Firestore, Storage), di-host di GitHub Pages, dan bisa dipasang sebagai aplikasi (PWA) di Android, iOS & PC.
+Situs bio-link dengan Firebase (Auth & Firestore), di-host di GitHub Pages, dan bisa dipasang sebagai aplikasi (PWA) di Android, iOS & PC.
 
 © Bohye 2026 Darkness 666
 
@@ -16,10 +16,9 @@ LPtest/
 ├── version.js            versi aplikasi + copyright  ← naikkan setiap update
 ├── firebase-config.js    konfigurasi Firebase + email superadmin
 ├── firestore.rules       aturan database
-├── storage.rules         aturan upload video
 ├── css/  style.css, themes.css
 ├── icons/
-└── js/   firebase.js  ui.js  site.js  pwa.js  device.js  badges.js  card.js
+└── js/   firebase.js  ui.js  site.js  pwa.js  device.js  badges.js  youtube.js  card.js
           app.js  dashboard.js  profile.js  admin.js  theme-boot.js  redirect.js
 ```
 
@@ -33,11 +32,7 @@ Semua JavaScript ada di file `.js` terpisah — tidak ada script di dalam HTML.
 2. **Authentication → Users → Add user** → buat akun superadmin (`asdf@asdf.com` + password kuat).
 3. **Authentication → Settings → Authorized domains** → tambahkan `celestialiris.github.io`.
 4. **Firestore → Rules** → tempel isi `firestore.rules` → **Publish**.
-5. **Storage** (untuk video background):
-   - Firebase mewajibkan paket **Blaze** untuk Storage di project baru. Pemakaian kecil tetap gratis dalam kuota; pasang *budget alert* di Google Cloud agar aman.
-   - **Storage → Get started** → **Rules** → tempel isi `storage.rules` → **Publish**.
-   - Tanpa Storage, semua fitur lain tetap jalan; hanya upload video yang gagal.
-6. Buka `https://celestialiris.github.io/LPtest/admin.html` dan **langsung masuk** dengan akun superadmin. Login pertama ini mengaktifkan & mengunci status superadmin.
+5. Buka `https://celestialiris.github.io/LPtest/admin.html` dan **langsung masuk** dengan akun superadmin. Login pertama ini mengaktifkan & mengunci status superadmin.
 
 ## 2. Deploy ke GitHub Pages
 
@@ -55,7 +50,7 @@ Setiap kali mengubah file, **naikkan `APP_VERSION` di `version.js`** (mis. `2.0.
 | **Ringkasan** | Pendaftaran baru (live, bunyi + notifikasi browser) & aktivitas terbaru |
 | **Anggota** | Tabel semua anggota → **Detail**: email, status verifikasi, UID, tanggal bergabung, login terakhir, profil, views, aktivitas; tombol **kirim link reset password**, **beri badge**, hapus profil |
 | **Reset password** | Permintaan dari anggota yang lupa password + form kirim link reset manual |
-| **Log aktivitas** | Daftar, masuk, keluar, ganti password/email, simpan profil, upload video, dll. — dengan perangkat, OS, browser, waktu, lokasi perkiraan & ukuran layar |
+| **Log aktivitas** | Daftar, masuk, keluar, ganti password/email, simpan profil, ganti video, dll. — dengan perangkat, OS, browser, waktu, lokasi perkiraan & ukuran layar |
 | **Tampilan** | Pilih 1 dari 4 tema & upload logo situs (berlaku langsung untuk semua pengunjung) |
 
 Superadmin otomatis mendapat badge **Verified** + **Developer**.
@@ -71,7 +66,7 @@ Superadmin otomatis mendapat badge **Verified** + **Developer**.
 Verified, Developer, Gamer, Technician, Creator, Moderator, VIP, Streamer, Musician, Artist, Supporter, OG Member. Hanya superadmin yang bisa memberi/mencabut. Tambah badge baru di `js/badges.js`.
 
 ### Anggota
-Daftar dengan email sendiri, klaim username, atur profil, upload **video background** (MP4/WebM/MOV, maks. 25 MB, otomatis tanpa suara & berulang) dengan **slider blur 0–20 px**. Lupa password → kirim link sendiri, atau **minta bantuan superadmin**.
+Daftar dengan email sendiri, klaim username, atur profil, pasang **video background dari link YouTube** (video biasa, Shorts, atau live; otomatis tanpa suara & berulang), **slider blur 0–20 px**, dan **backdrop** berupa lapisan warna pilihan dengan **transparansi 0–100%**. Lupa password → kirim link sendiri, atau **minta bantuan superadmin**.
 
 ### PWA
 - **Android / PC (Chrome, Edge):** muncul tombol **Pasang** otomatis, atau klik "📲 Pasang aplikasi" di footer.
@@ -82,7 +77,7 @@ Daftar dengan email sendiri, klaim username, atur profil, upload **video backgro
 ## Struktur data Firestore
 
 ```
-users/{uid}              profil publik (+ badges, bgVideo, bgBlur)
+users/{uid}              profil publik (+ badges, bgYoutube, bgBlur, overlayColor, overlayOpacity)
 usernames/{name}         kunci username unik
 members/{uid}            email, nama, status verifikasi, login terakhir   (pemilik & admin)
 notifications/{uid}      notifikasi pendaftaran                           (admin)

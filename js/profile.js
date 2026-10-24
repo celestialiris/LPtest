@@ -1,6 +1,6 @@
 import { loadPublic, addView, validUsername, SITE_NAME } from "./firebase.js";
 import { applyBrand } from "./ui.js";
-import { renderCard, applyBg, applyVideoBg } from "./card.js";
+import { renderCard, applyBg, applyVideoBg, applyOverlay } from "./card.js";
 
 applyBrand();
 
@@ -28,6 +28,7 @@ function notFound(msg) {
   const video = applyVideoBg(document.body, p);
   if (video) page.classList.add("has-video");
   else applyBg(document.getElementById("bg"), p.bg);
+  applyOverlay(document.body, p);
   renderCard(card, p);
 
   // Hitung 1 view per sesi browser
@@ -36,6 +37,5 @@ function notFound(msg) {
 
   enter.addEventListener("click", () => {
     enter.classList.add("gone"); page.classList.add("entered");
-    if (video) video.play().catch(() => {});
   }, { once: true });
 })();

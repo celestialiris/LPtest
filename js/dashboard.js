@@ -1,10 +1,11 @@
 import {
   configured, onUser, logout, getMyProfile, saveProfile, claim, isAvailable, validUsername,
-  profileUrl, toast, escapeHtml, loadPublic, uploadBgVideo, removeBgVideo, VIDEO_MAX_MB, hasPasswordLogin, changeEmail, changePassword, authMessage, ensureMember, isAdmin
+  profileUrl, toast, escapeHtml, loadPublic, hasPasswordLogin, changeEmail, changePassword, authMessage, ensureMember, isAdmin
 } from "./firebase.js";
 import { applyBrand, cursorGlow } from "./ui.js";
 import { renderCard } from "./card.js";
 import { badgesHtml } from "./badges.js";
+import { youtubeId, ytThumb } from "./youtube.js";
 
 applyBrand(); cursorGlow();
 
@@ -42,6 +43,10 @@ function readForm() {
     bg: String(f.get("bg") || "").trim().slice(0, 500),
     accent: String(f.get("accent") || "#a855f7"),
     bgBlur: Math.max(0, Math.min(20, parseInt(f.get("bgBlur"), 10) || 0)),
+    bgYoutube: youtubeId(f.get("bgYoutube")),
+    overlayColor: /^#[0-9a-f]{6}$/i.test(f.get("overlayColor")) ? f.get("overlayColor") : "#000000",
+    overlayOpacity: Math.max(0, Math.min(100, parseInt(f.get("overlayOpacity"), 10) || 0)),
+    bgVideo: "", bgVideoPath: "",
     links: [...linksBox.children].map((r) => ({
       title: r.querySelector(".t").value.trim().slice(0, 40),
       url: r.querySelector(".u").value.trim().slice(0, 300)
@@ -53,6 +58,8 @@ function update() {
   const data = readForm();
   $("bioCount").textContent = `${data.bio.length}/160`;
   $("blurVal").textContent = `${data.bgBlur} px`;
+  $("opVal").textContent = `${data.overlayOpacity}%`;
+  document.querySelectorAll("#swatches button").forEach((b) => b.classList.toggle("on", b.dataset.c.toLowerCase() === data.overlayColor.toLowerCase()));
   renderCard($("preview"), { ...profile, ...data }, { previewVideo: true });
 }
 form.addEventListener("input", update);
@@ -65,6 +72,9 @@ function fill(p) {
   form.accent.value = p.accent || "#a855f7";
   form.bgBlur.value = Number.isFinite(+p.bgBlur) ? p.bgBlur : 6;
   $("myBadges").innerHTML = badgesHtml(p.badges) || '<span style="color:var(--mute);font-size:.85rem">Belum ada badge.</span>';
+  form.bgYoutube.value = p.bgYoutube ? `https://youtu.be/${p.bgYoutube}` : "";
+  form.overlayColor.value = /^#[0-9a-f]{6}$/i.test(p.overlayColor || "") ? p.overlayColor : "#000000";
+  form.overlayOpacity.value = Number.isFinite(+p.overlayOpacity) ? p.overlayOpacity : 35;
   syncVideo();
   linksBox.innerHTML = "";
   (p.links || []).forEach(linkRow);
@@ -79,7 +89,7 @@ form.addEventListener("submit", async (e) => {
   const btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Menyimpan…";
   try {
     const data = readForm();
-    await saveProfile(user.uid, data);
+    await saveProfile(user.uid, data, profile);
     profile = { ...profile, ...data };
     toast("Tersimpan ✓", "ok");
   } catch (err) { toast("Gagal menyimpan: " + (err.code || err.message), "bad"); }
@@ -91,44 +101,30 @@ $("copyBtn").onclick = async () => {
   catch { toast("Tidak bisa menyalin otomatis.", "bad"); }
 };
 
-// ---------- video background ----------
-function syncVideo() {
-  const has = !!profile?.bgVideo;
-  $("videoRow").hidden = !has;
-  if (has && $("videoThumb").src !== profile.bgVideo) $("videoThumb").src = profile.bgVideo;
-  if (!has) $("videoThumb").removeAttribute("src");
-}
-
-async function handleVideo(file) {
-  if (!file) return;
-  if (!configured) return toast("Mode demo: hubungkan Firebase untuk upload video.", "bad");
-  if (file.size > VIDEO_MAX_MB * 1024 * 1024) return toast(`Ukuran video maksimal ${VIDEO_MAX_MB} MB.`, "bad");
-  const prog = $("videoProg"), bar = prog.querySelector("i");
-  prog.hidden = false; bar.style.width = "0%";
-  try {
-    const url = await uploadBgVideo(user.uid, file, (p) => (bar.style.width = Math.round(p * 100) + "%"));
-    profile = { ...profile, bgVideo: url };
-    syncVideo(); update();
-    toast("Video background tersimpan ✓", "ok");
-  } catch (err) {
-    toast(err.code === "storage/unauthorized" ? "Upload ditolak — cek storage.rules." : (err.message || "Upload gagal."), "bad");
-  } finally { setTimeout(() => (prog.hidden = true), 600); $("videoFile").value = ""; }
-}
-
-$("videoFile").addEventListener("change", (e) => handleVideo(e.target.files[0]));
-const drop = $("videoDrop");
-["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
-["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
-drop.addEventListener("drop", (e) => handleVideo(e.dataTransfer.files[0]));
-$("videoRemove").addEventListener("click", async () => {
-  if (!configured) return;
-  if (!confirm("Hapus video background?")) return;
-  try {
-    await removeBgVideo(user.uid, profile.bgVideoPath);
-    profile = { ...profile, bgVideo: "", bgVideoPath: "" };
-    syncVideo(); update(); toast("Video dihapus.", "ok");
-  } catch (err) { toast(authMessage(err), "bad"); }
+// ---------- warna backdrop cepat ----------
+const SWATCHES = ["#000000", "#0f172a", "#1e1b4b", "#4c1d95", "#831843", "#7f1d1d", "#064e3b", "#0c4a6e", "#ffffff"];
+$("swatches").innerHTML = SWATCHES.map((c) => `<button type="button" data-c="${c}" style="--c:${c}" aria-label="Warna ${c}"></button>`).join("");
+$("swatches").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-c]");
+  if (!b) return;
+  form.overlayColor.value = b.dataset.c;
+  update();
 });
+
+// ---------- video background YouTube ----------
+function syncVideo() {
+  const raw = $("ytInput").value.trim();
+  const id = youtubeId(raw);
+  $("ytRow").hidden = !id;
+  $("ytInput").classList.toggle("bad", !!raw && !id);
+  if (id) { $("ytThumb").src = ytThumb(id); $("ytStatus").textContent = "Video siap dipakai sebagai background."; }
+}
+$("ytInput").addEventListener("input", syncVideo);
+$("ytInput").addEventListener("change", () => {
+  const raw = $("ytInput").value.trim();
+  if (raw && !youtubeId(raw)) toast("Link YouTube tidak dikenali. Contoh: https://youtu.be/xxxxxxxxxxx", "bad");
+});
+$("ytClear").addEventListener("click", () => { $("ytInput").value = ""; syncVideo(); update(); });
 
 // ---------- akun: ganti email & password ----------
 function renderAccount(u) {

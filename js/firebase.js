@@ -9,21 +9,17 @@ import {
   getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, runTransaction,
   serverTimestamp, increment, collection, getCountFromServer, query, orderBy, limit, onSnapshot, where, addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { deviceInfo } from "./device.js";
 import { firebaseConfig, SITE_NAME, SITE_DOMAIN, SUPERADMIN_EMAIL } from "../firebase-config.js";
 
 export { SITE_NAME, SITE_DOMAIN, SUPERADMIN_EMAIL };
 export const configured = !String(firebaseConfig.apiKey).startsWith("YOUR");
 
-let auth = null, db = null, storage = null;
+let auth = null, db = null;
 if (configured) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  try { storage = getStorage(app); } catch (_) {}
 }
 
 export const USERNAME_RE = /^[a-z0-9_.]{2,20}$/;
@@ -241,18 +237,19 @@ export async function claim(name, user) {
       bg: "",
       links: [],
       badges: [],
-      bgVideo: "",
-      bgVideoPath: "",
+      bgYoutube: "",
       bgBlur: 6,
+      overlayColor: "#000000",
+      overlayOpacity: 35,
       views: 0,
       createdAt: serverTimestamp()
     });
   });
 }
 
-export async function saveProfile(uid, data) {
+export async function saveProfile(uid, data, before = {}) {
   await updateDoc(doc(db, "users", uid), data);
-  logActivity("profile_save");
+  logActivity("bgYoutube" in data && data.bgYoutube !== (before.bgYoutube || "") ? "video_upload" : "profile_save");
 }
 
 export async function countUsers() {
@@ -266,7 +263,7 @@ export async function loadPublic(name) {
     return {
       uid: "demo", username: name || "demo", displayName: "Nova", views: 2841,
       bio: "designer · night owl · building cool things ✦",
-      avatar: "", accent: "#a855f7", bg: "", bgVideo: "", bgBlur: 6,
+      avatar: "", accent: "#a855f7", bg: "", bgYoutube: "", bgBlur: 6, overlayColor: "#1e1b4b", overlayOpacity: 35,
       badges: ["verified", "developer", "gamer"],
       links: [
         { title: "GitHub", url: "https://github.com" },
@@ -353,36 +350,6 @@ export async function setBadges(uid, badges) {
 }
 
 // =====================================================================
-//  Video background profil (Firebase Storage)
-// =====================================================================
-export const VIDEO_MAX_MB = 25;
-
-export function uploadBgVideo(uid, file, onProgress) {
-  if (!storage) return Promise.reject(new Error("Firebase Storage belum aktif."));
-  if (!/^video\/(mp4|webm|quicktime)$/.test(file.type)) return Promise.reject(new Error("Format harus MP4, WebM, atau MOV."));
-  if (file.size > VIDEO_MAX_MB * 1024 * 1024) return Promise.reject(new Error(`Ukuran maksimal ${VIDEO_MAX_MB} MB.`));
-  const ext = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" }[file.type];
-  const r = sref(storage, `videos/${uid}/background.${ext}`);
-  return new Promise((resolve, reject) => {
-    const task = uploadBytesResumable(r, file, { contentType: file.type, cacheControl: "public,max-age=86400" });
-    task.on("state_changed",
-      (s) => onProgress?.(s.bytesTransferred / s.totalBytes),
-      reject,
-      async () => {
-        const url = await getDownloadURL(task.snapshot.ref);
-        await updateDoc(doc(db, "users", uid), { bgVideo: url, bgVideoPath: r.fullPath });
-        logActivity("video_upload");
-        resolve(url);
-      });
-  });
-}
-
-export async function removeBgVideo(uid, path) {
-  if (path && storage) { try { await deleteObject(sref(storage, path)); } catch (_) {} }
-  await updateDoc(doc(db, "users", uid), { bgVideo: "", bgVideoPath: "" });
-}
-
-// =====================================================================
 //  Permintaan reset password
 //  Password tidak pernah bisa dilihat siapa pun (disimpan ter-hash oleh Firebase).
 //  Superadmin mengirim link reset resmi Firebase ke email anggota.
@@ -417,7 +384,7 @@ export const dismissReset = (id) => deleteDoc(doc(db, "resetRequests", id));
 export const ACTIVITY_LABELS = {
   signup: "Mendaftar", login: "Masuk", logout: "Keluar",
   password_change: "Ganti password", email_change: "Ganti email",
-  profile_save: "Simpan profil", video_upload: "Upload video",
+  profile_save: "Simpan profil", video_upload: "Ganti video YouTube",
   site_settings: "Ubah tema/logo", badge_update: "Ubah badge", admin_reset_sent: "Kirim link reset"
 };
 

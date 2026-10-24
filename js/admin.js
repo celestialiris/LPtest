@@ -169,7 +169,7 @@ async function openMember(uid) {
     row("Nama tampilan", escapeHtml(p?.displayName || "—")),
     row("Bio", escapeHtml(p?.bio || "—")),
     row("Jumlah link", String(p?.links?.length || 0)),
-    row("Video background", p?.bgVideo ? "Ada" : "Tidak ada"),
+    row("Video background", p?.bgYoutube ? `<a class="u" href="https://youtu.be/${escapeHtml(p.bgYoutube)}" target="_blank" rel="noopener">YouTube ↗</a>` : "Tidak ada"),
     row("Views", (p?.views || 0).toLocaleString("id-ID")),
     row("Password", '<span class="muted">•••••••• (ter-hash, tidak bisa dilihat)</span>')
   ].join("");
